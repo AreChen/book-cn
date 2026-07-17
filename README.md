@@ -4,6 +4,8 @@
 
 This repository contains the source of "The Rust Programming Language" book.
 
+中文工作入口：[`README.zh-CN.md`](README.zh-CN.md)
+
 [The book is available in dead-tree form from No Starch Press][nostarch].
 
 [nostarch]: https://nostarch.com/rust-programming-language-2nd-edition

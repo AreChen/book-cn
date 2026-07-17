@@ -1,11 +1,11 @@
-# The Rust Programming Language
+# Rust 程序设计语言
 
-[The Rust Programming Language](title-page.md)
-[Foreword](foreword.md)
-[Introduction](ch00-00-introduction.md)
+[Rust 程序设计语言](title-page.md)
+[前言](foreword.md)
+[简介](ch00-00-introduction.md)
 
-- [Getting Started](ch01-00-getting-started.md)
-  - [Installation](ch01-01-installation.md)
+- [入门](ch01-00-getting-started.md)
+  - [安装](ch01-01-installation.md)
   - [Hello, World!](ch01-02-hello-world.md)
   - [Hello, Cargo!](ch01-03-hello-cargo.md)
 

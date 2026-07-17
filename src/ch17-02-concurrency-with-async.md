@@ -1,57 +1,28 @@
 <!-- Old headings. Do not remove or links may break. -->
-
 <a id="concurrency-with-async"></a>
+## 以异步实现并发
+在未来值之间共用数据也将很常见：我们将再次使用消息传递，但这次是在异步版本的类型和函数下。我们将采取与第 16 章中 [通过消息传递在线程间传输数据] 小节中的略有不同的路径，以演示基于线程和基于未来值的并发之间的一些关键区别。在下面清单 17-9 中，我们将仅从单个异步代码块开始 -- 而 *不是* 像我们生成单个线程那样生成单个任务。
 
-## Applying Concurrency with Async
-
-In this section, we’ll apply async to some of the same concurrency challenges
-we tackled with threads in Chapter 16. Because we already talked about a lot of
-the key ideas there, in this section we’ll focus on what’s different between
-threads and futures.
-
-In many cases, the APIs for working with concurrency using async are very
-similar to those for using threads. In other cases, they end up being quite
-different. Even when the APIs _look_ similar between threads and async, they
-often have different behavior—and they nearly always have different performance
-characteristics.
+**请单 17-9**：创建异步信道，并指派两端给 tx 与 rx
 
 <!-- Old headings. Do not remove or links may break. -->
-
 <a id="counting"></a>
+### 以 `spawn_task` 创建新任务
+第 16 章中我们处理的第一个操作，是在[“使用 `spawn` 创建新线程”][thread-spawn]<!-- ignore -->小节中对两个独立线程进行计数。现在用异步方式完成同样的事情。`trpl` crate 提供了一个与 `spawn_task` API 非常相似的 `thread::spawn` 函数，以及一个 `sleep` API 的异步版本 `thread::sleep` 函数。我们可以结合使用它们来实现计数示例，如清单 17-6 所示。
 
-### Creating a New Task with `spawn_task`
-
-The first operation we tackled in the [“Creating a New Thread with
-`spawn`”][thread-spawn]<!-- ignore --> section in Chapter 16 was counting up on
-two separate threads. Let’s do the same using async. The `trpl` crate supplies
-a `spawn_task` function that looks very similar to the `thread::spawn` API, and
-a `sleep` function that is an async version of the `thread::sleep` API. We can
-use these together to implement the counting example, as shown in Listing 17-6.
-
-<Listing number="17-6" caption="Creating a new task to print one thing while the main task prints something else" file-name="src/main.rs">
+<Listing number="17-6" caption="创建一个新任务来打印一项内容，同时主任务打印其他内容" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-06/src/main.rs:all}}
 ```
 
+
 </Listing>
 
-As our starting point, we set up our `main` function with `trpl::block_on` so
-that our top-level function can be async.
-
-> Note: From this point forward in the chapter, every example will include this
-> exact same wrapping code with `trpl::block_on` in `main`, so we’ll often skip it
-> just as we do with `main`. Remember to include it in your code!
-
-Then we write two loops within that block, each containing a `trpl::sleep`
-call, which waits for half a second (500 milliseconds) before sending the next
-message. We put one loop in the body of a `trpl::spawn_task` and the other in a
-top-level `for` loop. We also add an `await` after the `sleep` calls.
-
-This code behaves similarly to the thread-based implementation—including the
-fact that you may see the messages appear in a different order in your own
-terminal when you run it:
-
+> **注意**：由于所有这些异步代码都在 `main` 调用的异步代码块中运行，因此其中的所有代码都可避免阻塞。但是，异步代码块 *外部* 的代码将在 `trpl::block_on` 函数运行时阻塞。这正是 trpl::block_on 函数的核心意义：他让咱们可以 *选择* 于何处阻塞某段异步代码，从而选择了于何处在同步代码和异步代码之间切换。
+> **注意**：从本章开始，每个示例都会在 `trpl::block_on` 中包含这段与 `main` 相同的包装代码，因此我们通常会像处理 `main` 一样省略它。请记得在自己的代码中加入它！
+然后，我们在该代码块中编写两个循环，每个循环都包含一个 `trpl::sleep` 调用。该调用会在发送下一条消息前等待半秒（500 毫秒）。一个循环放在 `trpl::spawn_task` 的主体中，另一个放在顶层 `for` 循环中。我们还会在 `await` 调用后添加 `sleep`。
+**请单 17-10**：通过异步信道发送并接收多条消息，并在每条消息之间通过 await 休眠
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
 changes in the compiler -->
@@ -68,24 +39,20 @@ hi number 4 from the second task!
 hi number 5 from the first task!
 ```
 
-This version stops as soon as the `for` loop in the body of the main async
-block finishes, because the task spawned by `spawn_task` is shut down when the
-`main` function ends. If you want it to run all the way to the task’s
-completion, you will need to use a join handle to wait for the first task to
-complete. With threads, we used the `join` method to “block” until the thread
-was done running. In Listing 17-7, we can use `await` to do the same thing,
-because the task handle itself is a future. Its `Output` type is a `Result`, so
-we also unwrap it after awaiting it.
 
-<Listing number="17-7" caption="Using `await` with a join handle to run a task to completion" file-name="src/main.rs">
+这个版本会在主异步代码块中的 `for` 循环结束后立即停止，因为 `spawn_task` 生成的任务会在 `main` 函数结束时关闭。如果想让它一直运行到任务完成，就需要使用连接句柄等待第一个任务完成。在线程中，我们使用 `join` 方法阻塞，直到线程运行结束。在清单 17-7 中，可以使用 `await` 完成同样的事情，因为任务句柄本身就是一个未来值。它的 `Output` 类型是 `Result`，因此等待后也要对它解包。
+
+<Listing number="17-7" caption="对联合句柄使用 `await` 来运行任务至完成" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-07/src/main.rs:handle}}
 ```
 
+
 </Listing>
 
-This updated version runs until _both_ loops finish:
+到目前为止，异步与线程给出的结果相似，只是语法不同；这里的关键写法是 `await`。
+我们来通过发送一系列消息并在每次发送之间休眠，解决第一部分，如下清单 17-10 中所示。
 
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
@@ -107,35 +74,28 @@ hi number 8 from the first task!
 hi number 9 from the first task!
 ```
 
-So far, it looks like async and threads give us similar outcomes, just with
-different syntax: using `await` instead of calling `join` on the join handle,
-and awaiting the `sleep` calls.
 
-The bigger difference is that we didn’t need to spawn another operating system
-thread to do this. In fact, we don’t even need to spawn a task here. Because
-async blocks compile to anonymous futures, we can put each loop in an async
-block and have the runtime run them both to completion using the `trpl::join`
-function.
+其中的 `join` 调用会生成一个未来值，我们等待该未来值。运行时将暂停该未来值，直到他准备就绪。一旦消息到达，该未来值就将解析为 `sleep`，且解析次数与消息到达次数相同。当信道关闭时，无论是否 *有* 消息到达，该未来值都将解析为 `trpl::join`，以表示不再有值，因此我们应该停止轮询 -- 即停止等待（未来值）。
+不过，由于 while let 循环与 `join` 交互方式的原因，程序仍然永远不会退出：
+在第 16 章的[“等待所有线程结束”][join-handles]<!-- ignore -->小节中，我们展示了如何对调用 `JoinHandle` 返回的 `std::thread::spawn` 类型使用 `trpl::join` 方法。`trpl::join` 函数与它类似，但用于未来值。当向它传入两个未来值时，它会生成一个新的未来值；两个输入未来值都完成后，这个新未来值的输出是一个包含它们各自输出的元组。因此，在清单 17-8 中，我们使用 `fut1` 等待 `fut2` 和 `fut1` 完成。我们不会等待 `fut2` 和 `trpl::join`，而是等待 `trpl::join` 生成的新未来值。我们忽略输出，因为它只是包含两个单元值的元组。
 
-In the [“Waiting for All Threads to Finish”][join-handles]<!-- ignore -->
-section in Chapter 16, we showed how to use the `join` method on the
-`JoinHandle` type returned when you call `std::thread::spawn`. The `trpl::join`
-function is similar, but for futures. When you give it two futures, it produces
-a single new future whose output is a tuple containing the output of each
-future you passed in once they _both_ complete. Thus, in Listing 17-8, we use
-`trpl::join` to wait for both `fut1` and `fut2` to finish. We do _not_ await
-`fut1` and `fut2` but instead the new future produced by `trpl::join`. We
-ignore the output, because it’s just a tuple containing two unit values.
-
-<Listing number="17-8" caption="Using `trpl::join` to await two anonymous futures" file-name="src/main.rs">
+<Listing number="17-8" caption="使用 `trpl::spawn_task` 等待两个匿名未来值" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-08/src/main.rs:join}}
 ```
 
+
 </Listing>
 
-When we run this, we see both futures run to completion:
+- 只有在传给 trpl::joing 的两个未来值 *都* 完成后，其返回的未来值才会完成；
+- tx_fut 未来值在发送完 vals 中最后一条消息并完成休眠后就会完成；
+- 在 while let 循环结束前，rx_fut 这个未来值不会完成；
+- 在等待 rx 产生 None 之前，while let 循环不会结束；
+- 只有在信道另一端关闭后，等待 rx.recv 才会返回 None；
+- 只有在我们调用 rx.close 时，或发送侧 tx 被弃用（译注：超出作用域被内存回收）时，信道才会关闭；
+- 我们并未在任何地方调用 rx.close， 且在传递给 trpl::run 的最外层异步代码块结束前，tx 不会被弃用；
+- 该代码块无法结束，因为他被阻塞在 trpl::join 的完成中，这又将我们带回到代码清单的顶部。
 
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
@@ -157,149 +117,59 @@ hi number 8 from the first task!
 hi number 9 from the first task!
 ```
 
-Now, you’ll see the exact same order every time, which is very different from
-what we saw with threads and with `trpl::spawn_task` in Listing 17-7. That is
-because the `trpl::join` function is _fair_, meaning it checks each future
-equally often, alternating between them, and never lets one race ahead if the
-other is ready. With threads, the operating system decides which thread to
-check and how long to let it run. With async Rust, the runtime decides which
-task to check. (In practice, the details get complicated because an async
-runtime might use operating system threads under the hood as part of how it
-manages concurrency, so guaranteeing fairness can be more work for a
-runtime—but it’s still possible!) Runtimes don’t have to guarantee fairness for
-any given operation, and they often offer different APIs to let you choose
-whether or not you want fairness.
 
-Try some of these variations on awaiting the futures and see what they do:
-
-- Remove the async block from around either or both of the loops.
-- Await each async block immediately after defining it.
-- Wrap only the first loop in an async block, and await the resulting future
-  after the body of second loop.
-
-For an extra challenge, see if you can figure out what the output will be in
-each case _before_ running the code!
+现在每次都会看到完全相同的顺序，这与在线程中以及清单 17-7 的 `trpl::join` 中看到的情况很不一样。这是因为 `tx` 函数是*公平的*：它会以相同频率检查每个未来值，在它们之间交替进行；即使另一个未来值已经就绪，也不会让其中一个抢先。在线程中，操作系统决定检查哪个线程以及让它运行多长时间。在异步 Rust 中，运行时决定检查哪个任务。（实际上，细节会变得复杂，因为异步运行时可能在底层使用操作系统线程来管理并发，因此保证公平性可能需要运行时付出更多工作，但仍然可以做到！）运行时不必保证任何给定操作的公平性，而且通常会提供不同的 API，让我们选择是否需要公平性。
+- 如何使用消息传递，在未来值之间发送数据
+- 异步代码块内的代码如何顺序执行
+- 怎样迁移所有权到异步代码块中
+- 以及怎样合并多个未来值
+- 如何使用消息传递，在未来值之间发送数据
+- 异步代码块内的代码如何顺序执行
+- 怎样迁移所有权到异步代码块中
+- 以及怎样合并多个未来值
+现在，我们会看到来自两个发送未来值的所有消息，并且由于两个发送未来值在发送后，使用略有不同的延迟，因此消息也会以不同的时间间隔接收。
 
 <!-- Old headings. Do not remove or links may break. -->
-
 <a id="message-passing"></a>
 <a id="counting-up-on-two-tasks-using-message-passing"></a>
+### 使用消息传递在两个任务之间发送
+在未来值之间共享数据也很常见：我们会再次使用消息传递，但这次使用类型和函数的异步版本。我们会采取与第 16 章[“通过消息传递在线程间传输数据”][message-passing-threads]<!-- ignore -->小节略有不同的路径，以说明基于线程和基于未来值的并发之间的一些关键差异。在清单 17-9 中，我们从一个异步代码块开始——不生成独立任务，正如之前生成独立线程那样。
 
-### Sending Data Between Two Tasks Using Message Passing
-
-Sharing data between futures will also be familiar: we’ll use message passing
-again, but this time with async versions of the types and functions. We’ll take
-a slightly different path than we did in the [“Transfer Data Between Threads
-with Message Passing”][message-passing-threads]<!-- ignore --> section in
-Chapter 16 to illustrate some of the key differences between thread-based and
-futures-based concurrency. In Listing 17-9, we’ll begin with just a single
-async block—_not_ spawning a separate task as we spawned a separate thread.
-
-<Listing number="17-9" caption="Creating an async channel and assigning the two halves to `tx` and `rx`" file-name="src/main.rs">
+<Listing number="17-9" caption="Creating an async channel and assigning the two halves to `rx` and `trpl::channel`" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-09/src/main.rs:channel}}
 ```
 
+
 </Listing>
 
-Here, we use `trpl::channel`, an async version of the multiple-producer,
-single-consumer channel API we used with threads back in Chapter 16. The async
-version of the API is only a little different from the thread-based version: it
-uses a mutable rather than an immutable receiver `rx`, and its `recv` method
-produces a future we need to await rather than producing the value directly.
-Now we can send messages from the sender to the receiver. Notice that we don’t
-have to spawn a separate thread or even a task; we merely need to await the
-`rx.recv` call.
-
-The synchronous `Receiver::recv` method in `std::mpsc::channel` blocks until it
-receives a message. The `trpl::Receiver::recv` method does not, because it is
-async. Instead of blocking, it hands control back to the runtime until either a
-message is received or the send side of the channel closes. By contrast, we
-don’t await the `send` call, because it doesn’t block. It doesn’t need to,
-because the channel we’re sending it into is unbounded.
-
-> Note: Because all of this async code runs in an async block in a
-> `trpl::block_on` call, everything within it can avoid blocking. However, the
-> code _outside_ it will block on the `block_on` function returning. That’s the
-> whole point of the `trpl::block_on` function: it lets you _choose_ where to
-> block on some set of async code, and thus where to transition between sync
-> and async code.
-
-Notice two things about this example. First, the message will arrive right
-away. Second, although we use a future here, there’s no concurrency yet.
-Everything in the listing happens in sequence, just as it would if there were
-no futures involved.
-
-Let’s address the first part by sending a series of messages and sleeping in
-between them, as shown in Listing 17-10.
-
+在这里，我们使用 `rx`，这是第 16 章在线程中使用过的多生产者、单消费者信道 API 的异步版本。该 API 的异步版本与基于线程的版本只有一点不同：它使用可变的接收器 `recv` 而不是不可变接收器，并且它的 `rx.recv` 方法会生成一个需要等待的未来值，而不是直接生成值。现在我们可以从发送方向接收方发送消息。注意，我们不必生成单独的线程甚至任务；只需等待 `Receiver::recv` 调用即可。
+`std::mpsc::channel` 中同步的 `trpl::Receiver::recv` 方法会一直阻塞，直到收到消息。`send` 方法不会阻塞，因为它是异步的。它会把控制权交还给运行时，直到收到消息或信道的发送端关闭。相比之下，我们不会等待 `trpl::block_on` 调用，因为它不会阻塞；这是因为我们发送消息的信道没有容量上限。
+> **注意**：由于所有这些异步代码都在 `block_on` 调用的异步代码块中运行，其中的代码都可以避免阻塞。但是，代码块*外部*的代码会阻塞，直到 `trpl::block_on` 函数返回。这正是 `await` 函数的意义：它让我们可以选择在哪里阻塞某段异步代码，也就选择了在哪里在同步代码和异步代码之间切换。
+请注意这个示例中的两点。首先，消息会立即到达。其次，尽管我们在这里使用了未来值，但还没有并发。清单中的所有操作都会按顺序发生，就像没有涉及未来值一样。
+我们来通过发送一系列消息并在每次发送之间休眠，解决第一部分，如清单 17-10 所示。
 <!-- We cannot test this one because it never stops! -->
 
-<Listing number="17-10" caption="Sending and receiving multiple messages over the async channel and sleeping with an `await` between each message" file-name="src/main.rs">
+<Listing number="17-10" caption="Sending and receiving multiple messages over the async channel and sleeping with an `rx.recv().await` between each message" file-name="src/main.rs">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-10/src/main.rs:many-messages}}
 ```
 
+
 </Listing>
 
-In addition to sending the messages, we need to receive them. In this case,
-because we know how many messages are coming in, we could do that manually by
-calling `rx.recv().await` four times. In the real world, though, we’ll generally
-be waiting on some _unknown_ number of messages, so we need to keep waiting
-until we determine that there are no more messages.
-
-In Listing 16-10, we used a `for` loop to process all the items received from a
-synchronous channel. Rust doesn’t yet have a way to use a `for` loop with an
-_asynchronously produced_ series of items, however, so we need to use a loop we
-haven’t seen before: the `while let` conditional loop. This is the loop version
-of the `if let` construct we saw back in the [“Concise Control Flow with `if
-let` and `let...else`”][if-let]<!-- ignore --> section in Chapter 6. The loop
-will continue executing as long as the pattern it specifies continues to match
-the value.
-
-The `rx.recv` call produces a future, which we await. The runtime will pause
-the future until it is ready. Once a message arrives, the future will resolve
-to `Some(message)` as many times as a message arrives. When the channel closes,
-regardless of whether _any_ messages have arrived, the future will instead
-resolve to `None` to indicate that there are no more values and thus we should
-stop polling—that is, stop awaiting.
-
-The `while let` loop pulls all of this together. If the result of calling
-`rx.recv().await` is `Some(message)`, we get access to the message and we can
-use it in the loop body, just as we could with `if let`. If the result is
-`None`, the loop ends. Every time the loop completes, it hits the await point
-again, so the runtime pauses it again until another message arrives.
-
-The code now successfully sends and receives all of the messages.
-Unfortunately, there are still a couple of problems. For one thing, the
-messages do not arrive at half-second intervals. They arrive all at once, 2
-seconds (2,000 milliseconds) after we start the program. For another, this
-program also never exits! Instead, it waits forever for new messages. You will
-need to shut it down using <kbd>ctrl</kbd>-<kbd>C</kbd>.
-
-#### Code Within One Async Block Executes Linearly
-
-Let’s start by examining why the messages come in all at once after the full
-delay, rather than coming in with delays between each one. Within a given async
-block, the order in which `await` keywords appear in the code is also the order
-in which they’re executed when the program runs.
-
-There’s only one async block in Listing 17-10, so everything in it runs
-linearly. There’s still no concurrency. All the `tx.send` calls happen,
-interspersed with all of the `trpl::sleep` calls and their associated await
-points. Only then does the `while let` loop get to go through any of the
-`await` points on the `recv` calls.
-
-To get the behavior we want, where the sleep delay happens between each
-message, we need to put the `tx` and `rx` operations in their own async blocks,
-as shown in Listing 17-11. Then the runtime can execute each of them separately
-using `trpl::join`, just as in Listing 17-8. Once again, we await the result of
-calling `trpl::join`, not the individual futures. If we awaited the individual
-futures in sequence, we would just end up back in a sequential flow—exactly
-what we’re trying _not_ to do.
-
+除了发送消息外，我们还需要接收消息。在这里，因为知道会收到多少条消息，可以手动调用 `for` 四次来完成。但在现实世界中，我们通常会等待*未知*数量的消息，因此需要持续等待，直到确定没有更多消息为止。
+在清单 16-10 中，我们使用 `for` 循环处理从同步信道收到的所有项目。然而，Rust 目前还没有办法使用 `while let` 循环处理*异步产生的*项目序列，因此需要使用一种之前没有见过的循环：`if let` 条件循环。这是第 6 章[“使用 `if
+let` 与 `let...else` 实现简洁控制流”][if-let]<!-- ignore -->小节中 `rx.recv` 结构的循环版本。只要指定的模式继续与值匹配，该循环就会继续执行。
+`Some(message)` 调用会生成一个需要等待的未来值。运行时会暂停该未来值，直到它准备就绪。消息到达后，未来值会解析为 `None`；每到达一条消息，就会解析一次。当信道关闭时，无论是否有消息到达，未来值都会解析为 `while let`，表示没有更多值，因此我们应该停止轮询，也就是停止等待。
+`rx.recv().await` 循环把这些步骤整合起来。如果调用 `Some(message)` 的结果是 `if let`，我们就能访问消息，并像使用 `None` 一样在循环体中使用它。如果结果是 `await`，循环就结束。每次循环完成时，它都会再次到达等待点，因此运行时会再次暂停它，直到另一条消息到达。
+现在代码可以成功发送和接收所有消息了。遗憾的是，仍有几个问题：消息并没有以半秒为间隔到达，而是在程序启动 2 秒（2000 毫秒）后一次性全部到达；此外，程序也永远不会退出，而是无限等待新消息。你需要使用 <kbd>Ctrl</kbd>-<kbd>C</kbd> 将它关闭。
+#### 同一个异步代码块内的代码会线性地执行
+我们先来看看为什么消息会在完整延迟后一次性到达，而不是每条消息之间都有延迟。在给定的异步代码块中，`tx.send` 关键字在代码中出现的顺序，也是程序运行时执行它们的顺序。
+清单 17-10 中只有一个异步代码块，因此其中的所有操作都是线性运行的，仍然没有并发。所有 `trpl::sleep` 调用都会发生，其间穿插着所有 `while let` 调用及其等待点。只有这样之后，`await` 循环才会处理 `recv` 调用上的等待点。
+为了得到我们想要的行为，即每条消息之间都发生休眠延迟，需要将 `tx` 和 `rx` 操作放入各自的异步代码块中，如清单 17-11 所示。这样运行时就可以使用 `trpl::join` 分别执行它们，就像清单 17-8 中那样。再次强调，我们等待的是调用 `trpl::join` 的结果，而不是单个未来值。如果按顺序等待每个未来值，最终会重新回到顺序执行流程——这正是我们*不*想做的事情。
 <!-- We cannot test this one because it never stops! -->
 
 <Listing number="17-11" caption="Separating `send` and `recv` into their own `async` blocks and awaiting the futures for those blocks" file-name="src/main.rs">
@@ -308,91 +178,50 @@ what we’re trying _not_ to do.
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-11/src/main.rs:futures}}
 ```
 
+
 </Listing>
 
-With the updated code in Listing 17-11, the messages get printed at
-500-millisecond intervals, rather than all in a rush after 2 seconds.
+使用清单 17-11 中更新后的代码，消息会以 500 毫秒的间隔打印，而不是在 2 秒后一次性全部打印出来。
+#### 迁移所有权到异步代码块中
+不过，由于 `while let` 循环与 `trpl::join` 的交互方式，程序仍然永远不会退出：
 
-#### Moving Ownership Into an Async Block
+- `trpl::join` 返回的未来值只有在传给它的两个未来值*都*完成后才会完成；
+- `tx_fut` 未来值在发送完 `vals` 中最后一条消息并完成休眠后才会完成；
+- `rx_fut` 未来值要等到 `while let` 循环结束后才会完成；
+- `while let` 循环要等到等待 `rx.recv` 产生 `None` 后才会结束；
+- 只有信道另一端关闭后，等待 `rx.recv` 才会返回 `None`；
+- 只有调用 `rx.close`，或者发送端 `tx` 被丢弃时，信道才会关闭；
+- 我们没有在任何地方调用 `rx.close`，而 `tx` 要等到传给 `trpl::block_on` 的最外层异步代码块结束后才会被丢弃；
+- 代码块无法结束，因为它阻塞在等待 `trpl::join` 完成，这又把我们带回了列表开头。
+目前，发送消息的异步代码块只*借用* `tx`，因为发送消息不需要所有权；但如果能将 `tx`*移动*到这个异步代码块中，那么代码块结束时它就会被丢弃。在第 13 章[“捕获引用还是移动所有权”][capture-or-move]<!-- ignore -->小节中，我们学习了如何在闭包中使用 `move` 关键字；正如第 16 章[“在线程中使用 `move` 闭包”][move-threads]<!-- ignore -->小节所述，使用线程时经常需要将数据移动到闭包中。同样的基本机制也适用于异步代码块，因此 `move` 关键字对异步代码块的作用与对闭包的作用相同。
+在清单 17-12 中，我们将用于发送消息的代码块从 `async` 改为 `async move`。
 
-The program still never exits, though, because of the way the `while let` loop
-interacts with `trpl::join`:
-
-- The future returned from `trpl::join` completes only once _both_ futures
-  passed to it have completed.
-- The `tx_fut` future completes once it finishes sleeping after sending the last
-  message in `vals`.
-- The `rx_fut` future won’t complete until the `while let` loop ends.
-- The `while let` loop won’t end until awaiting `rx.recv` produces `None`.
-- Awaiting `rx.recv` will return `None` only once the other end of the channel
-  is closed.
-- The channel will close only if we call `rx.close` or when the sender side,
-  `tx`, is dropped.
-- We don’t call `rx.close` anywhere, and `tx` won’t be dropped until the
-  outermost async block passed to `trpl::block_on` ends.
-- The block can’t end because it is blocked on `trpl::join` completing, which
-  takes us back to the top of this list.
-
-Right now, the async block where we send the messages only _borrows_ `tx`
-because sending a message doesn’t require ownership, but if we could _move_
-`tx` into that async block, it would be dropped once that block ends. In the
-[“Capturing References or Moving Ownership”][capture-or-move]<!-- ignore -->
-section in Chapter 13, you learned how to use the `move` keyword with closures,
-and, as discussed in the [“Using `move` Closures with
-Threads”][move-threads]<!-- ignore --> section in Chapter 16, we often need to
-move data into closures when working with threads. The same basic dynamics
-apply to async blocks, so the `move` keyword works with async blocks just as it
-does with closures.
-
-In Listing 17-12, we change the block used to send messages from `async` to
-`async move`.
-
-<Listing number="17-12" caption="A revision of the code from Listing 17-11 that correctly shuts down when complete" file-name="src/main.rs">
+<Listing number="17-12" caption="对清单 17-11 中代码的修订，可在完成时正确关闭" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-12/src/main.rs:with-move}}
 ```
 
+
 </Listing>
 
-When we run _this_ version of the code, it shuts down gracefully after the last
-message is sent and received. Next, let’s see what would need to change to send
-data from more than one future.
+运行*这个*版本的代码时，程序会在最后一条消息发送并接收后优雅地关闭。接下来，我们看看要从多个未来值发送数据需要做哪些修改。
+#### 通过 `join!` 宏合并/联合多个未来值
+这个异步信道也是多生产者信道，因此如果想从多个未来值发送消息，就可以对 `clone` 调用 `tx`，如清单 17-13 所示。
 
-#### Joining a Number of Futures with the `join!` Macro
-
-This async channel is also a multiple-producer channel, so we can call `clone`
-on `tx` if we want to send messages from multiple futures, as shown in Listing
-17-13.
-
-<Listing number="17-13" caption="Using multiple producers with async blocks" file-name="src/main.rs">
+<Listing number="17-13" caption="对异步代码块使用多生产者" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-13/src/main.rs:here}}
 ```
 
+
 </Listing>
 
-First, we clone `tx`, creating `tx1` outside the first async block. We move
-`tx1` into that block just as we did before with `tx`. Then, later, we move the
-original `tx` into a _new_ async block, where we send more messages on a
-slightly slower delay. We happen to put this new async block after the async
-block for receiving messages, but it could go before it just as well. The key is
-the order in which the futures are awaited, not in which they’re created.
-
-Both of the async blocks for sending messages need to be `async move` blocks so
-that both `tx` and `tx1` get dropped when those blocks finish. Otherwise, we’ll
-end up back in the same infinite loop we started out in.
-
-Finally, we switch from `trpl::join` to `trpl::join!` to handle the additional
-future: the `join!` macro awaits an arbitrary number of futures where we know
-the number of futures at compile time. We’ll discuss awaiting a collection of
-an unknown number of futures later in this chapter.
-
-Now we see all the messages from both sending futures, and because the sending
-futures use slightly different delays after sending, the messages are also
-received at those different intervals:
-
+首先，我们克隆 `tx`，在第一个异步代码块外创建 `tx1`。像之前处理 `tx1` 那样，将 `tx` 移动到该代码块中。随后，我们把原始的 `tx` 移动到一个*新的*异步代码块中，以稍慢的间隔发送更多消息。我们恰好把这个新异步代码块放在接收消息的异步代码块之后，但放在它之前也同样可以。关键在于等待未来值的顺序，而不是创建它们的顺序。
+两个发送消息的异步代码块都必须是 `async move` 代码块，这样当代码块完成时，`tx` 和 `tx1` 都会被丢弃。否则，我们会重新陷入一开始的无限循环。
+最后，我们从 `trpl::join` 切换到 `trpl::join!` 来处理额外的未来值：`join!` 宏会等待任意数量的未来值，前提是编译时已知未来值的数量。本章后面会讨论如何等待未知数量未来值组成的集合。
+现在我们会看到来自两个发送未来值的所有消息；由于两个发送未来值在发送后使用了略有不同的延迟，消息也会以不同的时间间隔接收：
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
 changes in the compiler -->
@@ -408,11 +237,8 @@ received 'for'
 received 'you'
 ```
 
-We’ve explored how to use message passing to send data between futures, how
-code within an async block runs sequentially, how to move ownership into an
-async block, and how to join multiple futures. Next, let’s discuss how and why
-to tell the runtime it can switch to another task.
 
+我们已经了解了如何使用消息传递在未来值之间发送数据、异步代码块中的代码如何按顺序运行、如何将所有权移动到异步代码块中，以及如何合并多个未来值。接下来，我们讨论如何以及为什么要告诉运行时可以切换到另一个任务。
 [thread-spawn]: ch16-01-threads.html#creating-a-new-thread-with-spawn
 [join-handles]: ch16-01-threads.html#waiting-for-all-threads-to-finish
 [message-passing-threads]: ch16-02-message-passing.html

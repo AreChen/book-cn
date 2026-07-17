@@ -1,49 +1,16 @@
-# Fearless Concurrency
+# 无惧并发
 
-Handling concurrent programming safely and efficiently is another of Rust’s
-major goals. _Concurrent programming_, in which different parts of a program
-execute independently, and _parallel programming_, in which different parts of
-a program execute at the same time, are becoming increasingly important as more
-computers take advantage of their multiple processors. Historically,
-programming in these contexts has been difficult and error-prone. Rust hopes to
-change that.
+安全并高效地处理并发编程，是 Rust 的另一主要目标。所谓 *并发编程，concurrent programming*，是指程序的各部分独立地执行，而 *并行编程，parallel programming*，是指程序的不同部分同时执行，随着越来越多的计算机利用其多个处理器，这两种编程范式变得日益重要。历史上，这两种情景下的编程一直都是既困难又容易出错。Rust 有望改变这一点。
 
-Initially, the Rust team thought that ensuring memory safety and preventing
-concurrency problems were two separate challenges to be solved with different
-methods. Over time, the team discovered that the ownership and type systems are
-a powerful set of tools to help manage memory safety _and_ concurrency
-problems! By leveraging ownership and type checking, many concurrency errors
-are compile-time errors in Rust rather than runtime errors. Therefore, rather
-than making you spend lots of time trying to reproduce the exact circumstances
-under which a runtime concurrency bug occurs, incorrect code will refuse to
-compile and present an error explaining the problem. As a result, you can fix
-your code while you’re working on it rather than potentially after it has been
-shipped to production. We’ve nicknamed this aspect of Rust _fearless
-concurrency_. Fearless concurrency allows you to write code that is free of
-subtle bugs and is easy to refactor without introducing new bugs.
+最初，Rust 团队曾认为确保内存安全和防止并发问题，属于两个独立的挑战，要以不同方法解决。随着时间的推移，团队发现所有权与类型系统是一套强大的工具，有助于管理内存安全 *和* 并发问题！通过利用所有权和类型检查，Rust 中许多并发错误都变成了编译时错误，而非运行时错误。因此，就不再要咱们花费大量时间尝试重现运行时并发 bug 发生的具体情况，而是不正确的代码将拒绝编译，并给出解释问题的报错。这样，咱们就可以在编写代码时修复代码，而不是交付代码到生产后才发现。我们给 Rust 的这一方面称为 *无惧并发*。无惧并发允许咱们编写没有隐蔽错误，及可以在不引入新的 bug 下易于重构的代码。
 
-> Note: For simplicity’s sake, we’ll refer to many of the problems as
-> _concurrent_ rather than being more precise by saying _concurrent and/or
-> parallel_. For this chapter, please mentally substitute _concurrent and/or
-> parallel_ whenever we use _concurrent_. In the next chapter, where the
-> distinction matters more, we’ll be more specific.
+> **注意**：为了简化起见，我们将把许多的这些问题统称为 *并发，concurrent*，而非更精确的表述为 *并发和/或并行，concurrent and/or parallel*。在本章中，每当我们使用 *并发* 一词时，请在脑海中替换为 *并发和/或并行*。在下一章中，由于这一区分更为重要，届时我们将更加具体。
 
-Many languages are dogmatic about the solutions they offer for handling
-concurrent problems. For example, Erlang has elegant functionality for
-message-passing concurrency but has only obscure ways to share state between
-threads. Supporting only a subset of possible solutions is a reasonable
-strategy for higher-level languages because a higher-level language promises
-benefits from giving up some control to gain abstractions. However, lower-level
-languages are expected to provide the solution with the best performance in any
-given situation and have fewer abstractions over the hardware. Therefore, Rust
-offers a variety of tools for modeling problems in whatever way is appropriate
-for your situation and requirements.
+许多语言在他们为解决并发问题提供的解决方案方面，都是机械教条主义的。例如，Erlang/OTP 虽然有着优雅的消息传递的并发功能，却只有一些在线程间共用状态的晦涩难懂的方式。对于高级语言来说，仅支持可行方案的子集是一种合理策略，因为高级语言带来了通过放弃部分控制权以获取抽象的好处。然而，底层语言被期望要在各种给定情形下，都能提供有着最佳性能的方案，而有着对硬件的较少抽象。因此，Rust 提供了多种工具，以适合于咱们的情况和要求的方式建模问题。
 
-Here are the topics we’ll cover in this chapter:
+以下是我们将在这一章中介绍的几个话题：
 
-- How to create threads to run multiple pieces of code at the same time
-- _Message-passing_ concurrency, where channels send messages between threads
-- _Shared-state_ concurrency, where multiple threads have access to some piece
-  of data
-- The `Sync` and `Send` traits, which extend Rust’s concurrency guarantees to
-  user-defined types as well as types provided by the standard library
+- 怎样创建线程，以同时运行代码的多个部分（多段代码）；
+- 基于 *消息传递* 的并发，其中有着发送线程之间消息的通道；
+- 基于 *状态共用* 的并发，其中多个线程均有着对某一数据的访问权限；
+- `Sync` 与 `Send` 特质，他们扩展 Rust 的并发保证到用户定义的类型，以及标准库提供的类型。

@@ -45,3 +45,18 @@ git diff --stat main...upstream/main
 - [ ] 术语符合 `GLOSSARY.md`。
 - [ ] 没有遗漏英文段落，也没有把参考译文中的旧版本内容带入当前章节。
 - [ ] `mdbook build` 和相关 `mdbook test` 通过。
+
+## 当前自动化基线
+
+提交翻译时至少运行：
+
+```powershell
+python ci/test_check_translation.py
+python ci/check_translation.py --upstream-ref upstream/main --require-chinese
+mdbook build
+cargo test --manifest-path packages/trpl/Cargo.toml --locked
+```
+
+`ci/check_translation.py` 保护代码围栏、内联代码、链接目标、URL、文件名、锚点、HTML 注释和 `Listing` 属性。它只把官方 `upstream/main` 作为结构基线，不会把参考译文仓库中的旧章节直接覆盖到当前文件。
+
+在 Windows 上，`mdbook test` 的异步示例可能因本机 `link.exe` 无法解析 `windows.*.lib` 而失败；这属于本地工具链链接环境问题。Linux CI 会继续执行完整的 mdBook 测试，遇到此类本地失败时应同时记录 Rust、mdBook 和目标工具链版本。

@@ -1,46 +1,20 @@
-# Smart Pointers
+# 灵巧指针
 
-A pointer is a general concept for a variable that contains an address in
-memory. This address refers to, or “points at,” some other data. The most
-common kind of pointer in Rust is a reference, which you learned about in
-Chapter 4. References are indicated by the `&` symbol and borrow the value they
-point to. They don’t have any special capabilities other than referring to
-data, and they have no overhead.
+所谓 *指针*，是个一般的概念，表示包含内存中某个地址的变量。这个地址引用，或者说 “指向” 某个别的数据。Rust 中最常见的指针类别属于引用，咱们在第 4 章中已经学过。引用以 `&` 符号表示，并借用他们指向的值。除了引用数据之外，他们没有任何特殊能力，并且没有开销。
 
-_Smart pointers_, on the other hand, are data structures that act like a
-pointer but also have additional metadata and capabilities. The concept of
-smart pointers isn’t unique to Rust: Smart pointers originated in C++ and exist
-in other languages as well. Rust has a variety of smart pointers defined in the
-standard library that provide functionality beyond that provided by references.
-To explore the general concept, we’ll look at a couple of different examples of
-smart pointers, including a _reference counting_ smart pointer type. This
-pointer enables you to allow data to have multiple owners by keeping track of
-the number of owners and, when no owners remain, cleaning up the data.
+另一方面，*灵巧指针* 属于数据结构，他们像指针一样工作，但还具有额外的元数据与能力。灵巧指针这一概念并非 Rust 独有：灵巧指针起源于 C++，也存在于其他语言中。Rust 在标准库中定义了各种灵巧指针，他们提供超越引用所提供的功能。为了探讨一般概念，我们将研究数个灵巧指针的不同示例，包括 *引用计数* 灵巧指针类型。这种指针让咱们可以通过跟踪所有者的数量，允许数据有多个所有者，并在没有所有者剩下时清理数据。
 
-In Rust, with its concept of ownership and borrowing, there is an additional
-difference between references and smart pointers: While references only borrow
-data, in many cases smart pointers _own_ the data they point to.
+在 Rust 中，由于其所有权和借用的概念，引用和灵巧指针之间还有一个额外区别：引用只借用数据，而在许多情况下，灵巧指针 *拥有* 他们指向的数据。
 
-Smart pointers are usually implemented using structs. Unlike an ordinary
-struct, smart pointers implement the `Deref` and `Drop` traits. The `Deref`
-trait allows an instance of the smart pointer struct to behave like a reference
-so that you can write your code to work with either references or smart
-pointers. The `Drop` trait allows you to customize the code that’s run when an
-instance of the smart pointer goes out of scope. In this chapter, we’ll discuss
-both of these traits and demonstrate why they’re important to smart pointers.
+灵巧指针通常使用结构体实现。不同于普通结构体，灵巧指针实现了 `Deref` 和 `Drop` 特质。 `Deref` `Drop`
 
-Given that the smart pointer pattern is a general design pattern used
-frequently in Rust, this chapter won’t cover every existing smart pointer. Many
-libraries have their own smart pointers, and you can even write your own. We’ll
-cover the most common smart pointers in the standard library:
+- Deref 特质允许灵巧指针结构体的实例可以像引用那样行事，从而咱们可以编写咱们的代码为既能处理引用，也能处理灵巧指针；
+- Drop 特质允许咱们定制在灵巧指针超出作用域时要运行的代码。
 
-- `Box<T>`, for allocating values on the heap
-- `Rc<T>`, a reference counting type that enables multiple ownership
-- `Ref<T>` and `RefMut<T>`, accessed through `RefCell<T>`, a type that enforces
-  the borrowing rules at runtime instead of compile time
+在这一章中，我们将讨论这两个特质，并演示他们为何对灵巧指针很重要。 `Box<T>` `Rc<T>` `Ref<T>` `RefMut<T>` `RefCell<T>`
 
-In addition, we’ll cover the _interior mutability_ pattern where an immutable
-type exposes an API for mutating an interior value. We’ll also discuss
-reference cycles: how they can leak memory and how to prevent them.
+鉴于灵巧指针模式属于 Rust 中最常用到的通用设计模式，这一章不会介绍每种现有的灵巧指针。许多库都有自己的灵巧指针，咱们甚至可以编写自己的灵巧指针。我们将介绍标准库中最常见的灵巧指针：
 
-Let’s dive in!
+- Box&lt;T>，用于在内存堆上分配值；
+- Rc&lt;T>，一种引用计数类型，实现了多重所有权；
+- Ref&lt;T> 和 RefMut&lt;T>，通过 RefCell&lt;T> 访问，这是一种在运行时而不是编译时强制执行借用规则检查的类型。

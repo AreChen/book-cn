@@ -1,24 +1,15 @@
-# Error Handling
+# 错误处理
 
-Errors are a fact of life in software, so Rust has a number of features for
-handling situations in which something goes wrong. In many cases, Rust requires
-you to acknowledge the possibility of an error and take some action before your
-code will compile. This requirement makes your program more robust by ensuring
-that you’ll discover errors and handle them appropriately before deploying your
-code to production!
+错误是软件中不可避免的一部分，因此 Rust 提供了许多特性来处理出错的情况。在
+许多情况下，Rust 要求你承认错误发生的可能性并采取措施，代码才能编译。这一要
+求确保你在部署代码到生产环境前发现错误并妥善处理，从而让程序更加健壮！
 
-Rust groups errors into two major categories: recoverable and unrecoverable
-errors. For a _recoverable error_, such as a _file not found_ error, we most
-likely just want to report the problem to the user and retry the operation.
-_Unrecoverable errors_ are always symptoms of bugs, such as trying to access a
-location beyond the end of an array, and so we want to immediately stop the
-program.
+Rust 将错误分为两大类：可恢复错误和不可恢复错误。对于_可恢复错误_，例如_文件
+未找到_错误，我们通常只想向用户报告问题，然后重试操作。_不可恢复错误_总是
+bug 的征兆，例如尝试访问数组末尾之外的位置，因此我们希望立即停止程序。
 
-Most languages don’t distinguish between these two kinds of errors and handle
-both in the same way, using mechanisms such as exceptions. Rust doesn’t have
-exceptions. Instead, it has the type `Result<T, E>` for recoverable errors and
-the `panic!` macro that stops execution when the program encounters an
-unrecoverable error. This chapter covers calling `panic!` first and then talks
-about returning `Result<T, E>` values. Additionally, we’ll explore
-considerations when deciding whether to try to recover from an error or to stop
-execution.
+大多数语言不区分这两类错误，而是使用异常等机制以相同方式处理它们。Rust 没有
+异常。相反，它为可恢复错误提供 `Result<T, E>` 类型，并提供在程序遇到不可恢复
+错误时停止执行的 `panic!` 宏。本章将先介绍调用 `panic!`，然后讨论返回
+`Result<T, E>` 值。此外，我们还会探讨在决定尝试从错误中恢复还是停止执行时需要
+考虑的因素。

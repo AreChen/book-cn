@@ -1,25 +1,18 @@
-# Common Collections
+# 常见集合
 
-Rust’s standard library includes a number of very useful data structures called
-_collections_. Most other data types represent one specific value, but
-collections can contain multiple values. Unlike the built-in array and tuple
-types, the data that these collections point to is stored on the heap, which
-means the amount of data does not need to be known at compile time and can grow
-or shrink as the program runs. Each kind of collection has different
-capabilities and costs, and choosing an appropriate one for your current
-situation is a skill you’ll develop over time. In this chapter, we’ll discuss
-three collections that are used very often in Rust programs:
+Rust 的标准库包含许多非常实用的数据结构，称为“集合”。大多数其他数据类型
+表示一个特定值，而集合可以包含多个值。不同于内置的数组和元组类型，这些集合
+指向的数据存储在堆上，因此数据量不必在编译时确定，并且可以随着程序运行而增
+长或缩小。每种集合都有不同的能力和开销，选择适合当前情况的集合，是你会随着
+时间逐渐培养起来的一项技能。本章将讨论 Rust 程序中经常使用的三种集合：
 
-- A _vector_ allows you to store a variable number of values next to each other.
-- A _string_ is a collection of characters. We’ve mentioned the `String` type
-  previously, but in this chapter, we’ll talk about it in depth.
-- A _hash map_ allows you to associate a value with a specific key. It’s a
-  particular implementation of the more general data structure called a _map_.
+- _向量_允许你并排存储数量可变的值。
+- _字符串_是字符的集合。我们之前提到过 `String` 类型，但本章会深入讨论它。
+- _哈希映射_允许你将一个值与特定的键关联起来。它是更通用的数据结构——
+  _映射_的一种具体实现。
 
-To learn about the other kinds of collections provided by the standard library,
-see [the documentation][collections].
+要了解标准库提供的其他集合类型，请参阅[文档][collections]。
 
-We’ll discuss how to create and update vectors, strings, and hash maps, as well
-as what makes each special.
+我们将讨论如何创建和更新向量、字符串与哈希映射，以及每种集合的特殊之处。
 
 [collections]: ../std/collections/index.html

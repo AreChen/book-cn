@@ -1,35 +1,34 @@
-## Unrecoverable Errors with `panic!`
+## `panic!` 下的不可恢复错误
 
-Sometimes bad things happen in your code, and there’s nothing you can do about
-it. In these cases, Rust has the `panic!` macro. There are two ways to cause a
-panic in practice: by taking an action that causes our code to panic (such as
-accessing an array past the end) or by explicitly calling the `panic!` macro.
-In both cases, we cause a panic in our program. By default, these panics will
-print a failure message, unwind, clean up the stack, and quit. Via an
-environment variable, you can also have Rust display the call stack when a
-panic occurs to make it easier to track down the source of the panic.
+有时一些糟糕的事情会发生于咱们的代码中，而咱们对此无计可施。在这些情况下，Rust 提供了 `panic!` 宏。在实践中，造成程序停止执行的方式有两种：
 
-> ### Unwinding the Stack or Aborting in Response to a Panic
+- 采取导致咱们代码停止执行的一些操作，比如于超出末端处访问数组；
+- 或显式调用 `panic!`。
+
+在这两种情况下，我们都会引起程序中的停止执行。默认情况下，这些停止执行将打印失败消息、展开栈帧、清理栈并退出。通过一个环境变量，咱们还可以让 Rust 在终止执行发生时显示出调用栈，以使追踪终止执行的源头更容易。
+
+> **响应终止执行的展开栈帧或终止**
 >
-> By default, when a panic occurs, the program starts _unwinding_, which means
-> Rust walks back up the stack and cleans up the data from each function it
-> encounters. However, walking back and cleaning up is a lot of work. Rust
-> therefore allows you to choose the alternative of immediately _aborting_,
-> which ends the program without cleaning up.
+> **响应 panic 时展开栈或终止程序**
 >
-> Memory that the program was using will then need to be cleaned up by the
-> operating system. If in your project you need to make the resultant binary as
-> small as possible, you can switch from unwinding to aborting upon a panic by
-> adding `panic = 'abort'` to the appropriate `[profile]` sections in your
-> _Cargo.toml_ file. For example, if you want to abort on panic in release mode,
-> add this:
+> 默认情况下，当终止运行发生时，程序会开始 *展开栈帧，unwinding*，这意味着 Rust 会沿栈向上遍历，并清理他遇到的每个函数的数据。然而，回退并清理工作量很大。因此，Rust 允许咱们选择立即 *退出，aborting* 的替代方案，这会在不清理的情况下结束程序。
 >
+> 此时，程序使用的内存将需要由操作系统清理。当在项目中，咱们需要使最终二进制文件尽可能小时，咱们可通过添加 `panic = 'abort'` 到咱们 Cargo.toml 文件中的相应 `[profile]` 小节，在终止运行时从展开栈帧切换为退出。例如，若咱们希望在发布模式下当终止运行时退出，就要添加以下内容：
+>
+
 > ```toml
 > [profile.release]
 > panic = 'abort'
 > ```
 
-Let’s try calling `panic!` in a simple program:
+>
+> 参考资料：
+>
+> - C++ 中的栈展开（仅供参考）
+>
+> - C++ 中的栈展开
+
+咱们来在一个简单程序中尝试调用 `panic!`：
 
 <Listing file-name="src/main.rs">
 
@@ -39,35 +38,23 @@ Let’s try calling `panic!` in a simple program:
 
 </Listing>
 
-When you run the program, you’ll see something like this:
+当咱们运行程序时，咱们将看到类似下面的东西：
 
 ```console
 {{#include ../listings/ch09-error-handling/no-listing-01-panic/output.txt}}
 ```
 
-The call to `panic!` causes the error message contained in the last two lines.
-The first line shows our panic message and the place in our source code where
-the panic occurred: _src/main.rs:2:5_ indicates that it’s the second line,
-fifth character of our _src/main.rs_ file.
-
-In this case, the line indicated is part of our code, and if we go to that
-line, we see the `panic!` macro call. In other cases, the `panic!` call might
-be in code that our code calls, and the filename and line number reported by
-the error message will be someone else’s code where the `panic!` macro is
-called, not the line of our code that eventually led to the `panic!` call.
-
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="using-a-panic-backtrace"></a>
 
-We can use the backtrace of the functions the `panic!` call came from to figure
-out the part of our code that is causing the problem. To understand how to use
-a `panic!` backtrace, let’s look at another example and see what it’s like when
-a `panic!` call comes from a library because of a bug in our code instead of
-from our code calling the macro directly. Listing 9-1 has some code that
-attempts to access an index in a vector beyond the range of valid indexes.
+对 `panic!` 的调用会引发包含在最后两行中的错误消息。第一行显示了我们的终止运行消息，以及与咱们源代码中终止运行发生处的位置：src/main.rs:2:5 表示这是咱们的 src/main.rs 文件的第二行第五个字符。
 
-<Listing number="9-1" file-name="src/main.rs" caption="Attempting to access an element beyond the end of a vector, which will cause a call to `panic!`">
+在这一情形下，所指的行是我们代码的一部分，当我们前往该行，就会看到 `panic!` 宏调用。在别的情形下，`panic!` 调用可能位于我们的代码调用的代码中，而由错误消息报告的文件名与行号，将是 `panic!` 宏被调用处的其他人的代码，而不是最终导致 `panic!` 调用的咱们的代码的行。
+
+我们可使用对 `panic!` 调用所在函数的回溯，找出咱们代码中造成问题的部分。为理解怎样使用 `panic!` 回溯，我们来看另一示例，看看在由于我们代码中的 bug，而不是在我们的代码中直接调用该宏，来自某个库中的 `panic!` 时会是什么样的。下面清单 9-1 有着一些代码，试图访问某个矢量中超出有效索引范围的索引。
+
+<Listing number="9-1" file-name="src/main.rs" caption="尝试访问超出矢量末尾的元素，这将导致对 `panic!` 的调用">
 
 ```rust,should_panic,panics
 {{#rustdoc_include ../listings/ch09-error-handling/listing-09-01/src/main.rs}}
@@ -75,42 +62,17 @@ attempts to access an index in a vector beyond the range of valid indexes.
 
 </Listing>
 
-Here, we’re attempting to access the 100th element of our vector (which is at
-index 99 because indexing starts at zero), but the vector has only three
-elements. In this situation, Rust will panic. Using `[]` is supposed to return
-an element, but if you pass an invalid index, there’s no element that Rust
-could return here that would be correct.
+在这里，我们尝试访问矢量值的第 100 个元素（其位于索引 99 处，因为索引从 0 开始），但这个矢量只有三个元素。在这种情况下，Rust 将终止运行。使用 `[]` 本应返回一个元素，但当咱们传递无效索引时，Rust 便无法在这里返回正确的元素。
 
-In C, attempting to read beyond the end of a data structure is undefined
-behavior. You might get whatever is at the location in memory that would
-correspond to that element in the data structure, even though the memory
-doesn’t belong to that structure. This is called a _buffer overread_ and can
-lead to security vulnerabilities if an attacker is able to manipulate the index
-in such a way as to read data they shouldn’t be allowed to that is stored after
-the data structure.
+在 C 中，尝试读取超出数据结构末尾的内容属于未定义的行为。咱们可能得到内存中将对应于数据结构中该元素的位置处的任何内容，即使该内存不属于这一结构。这被称为 *缓冲区超量读取，buffer overread* <sup>1</sup>，并会在攻击者能够以这种方式操作索引，而读取到存储在数据结构之后、他们不被允许的数据时造成安全漏洞。
 
-To protect your program from this sort of vulnerability, if you try to read an
-element at an index that doesn’t exist, Rust will stop execution and refuse to
-continue. Let’s try it and see:
+为了保护咱们的程序免于此类漏洞的影响，当咱们尝试读取某个不存在的索引处的元素时，Rust 将停止执行并拒绝继续。我们来试试看：
+
+这一报错指向咱们的 main.rs 的第 4 行，其中我们尝试访问变量 v 中的矢量的索引 99。
 
 ```console
 {{#include ../listings/ch09-error-handling/listing-09-01/output.txt}}
 ```
-
-This error points at line 4 of our _main.rs_ where we attempt to access index
-99 of the vector in `v`.
-
-The `note:` line tells us that we can set the `RUST_BACKTRACE` environment
-variable to get a backtrace of exactly what happened to cause the error. A
-_backtrace_ is a list of all the functions that have been called to get to this
-point. Backtraces in Rust work as they do in other languages: The key to
-reading the backtrace is to start from the top and read until you see files you
-wrote. That’s the spot where the problem originated. The lines above that spot
-are code that your code has called; the lines below are code that called your
-code. These before-and-after lines might include core Rust code, standard
-library code, or crates that you’re using. Let’s try to get a backtrace by
-setting the `RUST_BACKTRACE` environment variable to any value except `0`.
-Listing 9-2 shows output similar to what you’ll see.
 
 <!-- manual-regeneration
 cd listings/ch09-error-handling/listing-09-01
@@ -119,7 +81,10 @@ copy the backtrace output below
 check the backtrace number mentioned in the text below the listing
 -->
 
-<Listing number="9-2" caption="The backtrace generated by a call to `panic!` displayed when the environment variable `RUST_BACKTRACE` is set">
+这一报错指向咱们的  的第 4 行，其中我们尝试访问变量 `v` 中的矢量的索引 。
+`note:` 行告诉我们，我们可以设置 `RUST_BACKTRACE` 环境变量来获取回溯，关于究竟发生了什么导致错误。所谓 *回溯，backtrace*，是到此为止调用的所有函数的列表。Rust 中的回溯与其他语言中的回溯工作方式一样：阅读回溯的关键是从顶部开始，读到看到咱们自己编写的文件为止。那便是问题的根源之处。该点上方的行是咱们的代码调用的代码；下方的行是调用咱们代码的代码。这些之前与之后的行可能包含核心 Rust 代码、标准库代码，或咱们正在使用的代码箱。我们来尝试通过设置 `RUST_BACKTRACE` 环境变量为除 `0` 以外的任何值来获取一次回溯。下面清单 9-2 显示了类似咱们将看到的输出。
+
+<Listing number="9-2" caption="环境变量 `panic!` 设置后，由 `RUST_BACKTRACE` 调用生成的回溯信息得以显示">
 
 ```console
 $ RUST_BACKTRACE=1 cargo run
@@ -147,24 +112,14 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 </Listing>
 
-That’s a lot of output! The exact output you see might be different depending
-on your operating system and Rust version. In order to get backtraces with this
-information, debug symbols must be enabled. Debug symbols are enabled by
-default when using `cargo build` or `cargo run` without the `--release` flag,
-as we have here.
+<!-- ignore -->
 
-In the output in Listing 9-2, line 6 of the backtrace points to the line in our
-project that’s causing the problem: line 4 of _src/main.rs_. If we don’t want
-our program to panic, we should start our investigation at the location pointed
-to by the first line mentioning a file we wrote. In Listing 9-1, where we
-deliberately wrote code that would panic, the way to fix the panic is to not
-request an element beyond the range of the vector indexes. When your code
-panics in the future, you’ll need to figure out what action the code is taking
-with what values to cause the panic and what the code should do instead.
+这可是大量的输出！咱们看到的确切输出可能会有所不同，具体取决于咱们的操作系统和 Rust 版本。为了获得带有这些信息的回溯，调试符号必须启用。默认情况下，在不带 --release 命令行开关下使用 `cargo build` 或 `cargo run` 时调试符号是启用的，就像我们在这里这样。
 
-We’ll come back to `panic!` and when we should and should not use `panic!` to
-handle error conditions in the [“To `panic!` or Not to
-`panic!`”][to-panic-or-not-to-panic]<!-- ignore --> section later in this
-chapter. Next, we’ll look at how to recover from an error using `Result`.
+在清单 9-2 的输出中，回溯的第 6 行指向咱们项目中造成问题的行：src/main.rs 的第 4 行。当我们不希望咱们的程序终止运行时，我们应该于提到我们编写的文件的第一行所指向的位置处开始我们的调查。在清单 9-1 中，我们故意编写了会引起程序终止运行的代码，修复这一终止运行的方法是不请求超出矢量值索引范围的元素。当今后咱们的代码终止运行时，咱们需要弄清楚代码正在对哪些值采取了什么操作造成了终止运行，以及该代码应该做什么。
+
+我们将在这一章中稍后的 [要 `--release` 或不要 `panic!`] 小节回到 `panic!`，以及何时应使用 `panic!` 与何时使用 `panic!` 处理错误情形。接下来，我们将了解怎样使用 Result 从错误中恢复。
+
+`Result`
 
 [to-panic-or-not-to-panic]: ch09-03-to-panic-or-not-to-panic.html#to-panic-or-not-to-panic

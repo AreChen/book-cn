@@ -1,58 +1,33 @@
-## Processing a Series of Items with Iterators
+## 以迭代器处理一系列项目
+迭代器模式允许咱们依次对一系列项目执行某些任务。所谓迭代器，负责遍历每个项目以及判断序列何时结束的逻辑。当咱们使用迭代器时，咱们不必自己重新实现该逻辑。
 
-The iterator pattern allows you to perform some task on a sequence of items in
-turn. An iterator is responsible for the logic of iterating over each item and
-determining when the sequence has finished. When you use iterators, you don’t
-have to reimplement that logic yourself.
+还要注意，我们从调用 `v1` 获取的值，属于对矢量中的值的不可变引用。`iter` 方法会生成一个对不可变引用的迭代器。当我们打算创建一个会取得 `Vec<T>` 的所有权并返回自有的值时，我们可以调用 into_iter 而不是 iter。同样的，当我们打算遍历可变引用时，可以调用 iter_mut 而不是 iter。
 
-In Rust, iterators are _lazy_, meaning they have no effect until you call
-methods that consume the iterator to use it up. For example, the code in
-Listing 13-10 creates an iterator over the items in the vector `v1` by calling
-the `iter` method defined on `Vec<T>`. This code by itself doesn’t do anything
-useful.
-
-<Listing number="13-10" file-name="src/main.rs" caption="Creating an iterator">
+<Listing number="13-10" file-name="src/main.rs" caption="创建迭代器">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-10/src/main.rs:here}}
 ```
 
+
 </Listing>
 
-The iterator is stored in the `v1_iter` variable. Once we’ve created an
-iterator, we can use it in a variety of ways. In Listing 3-5, we iterated over
-an array using a `for` loop to execute some code on each of its items. Under
-the hood, this implicitly created and then consumed an iterator, but we glossed
-over how exactly that works until now.
+我们不允许在调用 `v1_iter` 之后再使用 `for`，因为 sum 取我们对其调用他的迭代器的所有权。
+在清单 13-11 的示例中，我们将迭代器的创建与 `for` 循环中的使用分开。当使用 `for` 中的迭代器调用 `v1_iter` 循环时，迭代器中的每个元素都会在循环的一次迭代中使用，并打印出每个值。
 
-In the example in Listing 13-11, we separate the creation of the iterator from
-the use of the iterator in the `for` loop. When the `for` loop is called using
-the iterator in `v1_iter`, each element in the iterator is used in one
-iteration of the loop, which prints out each value.
-
-<Listing number="13-11" file-name="src/main.rs" caption="Using an iterator in a `for` loop">
+<Listing number="13-11" file-name="src/main.rs" caption="在 `for` 循环中使用迭代器">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-11/src/main.rs:here}}
 ```
 
+
 </Listing>
 
-In languages that don’t have iterators provided by their standard libraries,
-you would likely write this same functionality by starting a variable at index
-0, using that variable to index into the vector to get a value, and
-incrementing the variable value in a loop until it reached the total number of
-items in the vector.
-
-Iterators handle all of that logic for you, cutting down on repetitive code you
-could potentially mess up. Iterators give you more flexibility to use the same
-logic with many different kinds of sequences, not just data structures you can
-index into, like vectors. Let’s examine how iterators do that.
-
-### The `Iterator` Trait and the `next` Method
-
-All iterators implement a trait named `Iterator` that is defined in the
-standard library. The definition of the trait looks like this:
+在没有标准库提供迭代器的语言中，我们通常需要从索引为 0 的变量开始，使用这个变量索引矢量来获取值，然后在循环中递增变量，直到它达到矢量中的项目总数，才能编写相同的功能。
+迭代器为我们处理了所有这些逻辑，减少了可能出错的重复代码。迭代器让我们可以更灵活地对许多不同类型的序列使用相同的逻辑，而不仅仅是可以像矢量一样进行索引的数据结构。下面来看看迭代器是如何做到这一点的。
+### `Iterator` 特质与 `next` 方法
+所有迭代器都实现标准库定义的 `Iterator` 特质。特质的定义如下：
 
 ```rust
 pub trait Iterator {
@@ -64,166 +39,89 @@ pub trait Iterator {
 }
 ```
 
-Notice that this definition uses some new syntax: `type Item` and `Self::Item`,
-which are defining an associated type with this trait. We’ll talk about
-associated types in depth in Chapter 20. For now, all you need to know is that
-this code says implementing the `Iterator` trait requires that you also define
-an `Item` type, and this `Item` type is used in the return type of the `next`
-method. In other words, the `Item` type will be the type returned from the
-iterator.
 
-The `Iterator` trait only requires implementors to define one method: the
-`next` method, which returns one item of the iterator at a time, wrapped in
-`Some`, and, when iteration is over, returns `None`.
+请注意，这个定义使用了一些新语法：`type Item` 与 `Self::Item`，它们定义了这个特质下的关联类型。我们将在第 20 章中深入探讨关联类型。目前只需知道，实现 `Iterator` 特质需要同时定义一个 `Item` 类型，而这个 `Item` 类型会用于 `next` 方法的返回类型中。换言之，`Item` 类型将是迭代器返回的类型。
+`Iterator` 特质只要求实现者定义一个方法：`next` 方法。它每次返回迭代器中的一个项目，并将其包装在 `Some` 中；迭代结束时返回 `None`。
+我们可以直接在迭代器上调用 `next` 方法；清单 13-12 演示了对从矢量创建的迭代器反复调用 `next` 时会返回哪些值。
 
-We can call the `next` method on iterators directly; Listing 13-12 demonstrates
-what values are returned from repeated calls to `next` on the iterator created
-from the vector.
-
-<Listing number="13-12" file-name="src/lib.rs" caption="Calling the `next` method on an iterator">
+<Listing number="13-12" file-name="src/lib.rs" caption="对迭代器调用 `next` 方法">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-12/src/lib.rs:here}}
 ```
 
+
 </Listing>
 
-Note that we needed to make `v1_iter` mutable: Calling the `next` method on an
-iterator changes internal state that the iterator uses to keep track of where
-it is in the sequence. In other words, this code _consumes_, or uses up, the
-iterator. Each call to `next` eats up an item from the iterator. We didn’t need
-to make `v1_iter` mutable when we used a `for` loop, because the loop took
-ownership of `v1_iter` and made it mutable behind the scenes.
+请注意，我们需要将 `v1_iter` 设为可变：调用迭代器上的 `next` 方法会改变迭代器的内部状态，迭代器用它来跟踪自己在序列中的位置。换句话说，这段代码会“消费”迭代器，也就是用尽迭代器。每次调用 `next` 都会取走迭代器中的一个项目。当我们使用 `v1_iter` 循环时，不需要将 `for` 设为可变，因为循环取得了 `v1_iter` 的所有权，并在幕后将它设为可变。
+还要注意，我们从调用 `next` 得到的值，是对矢量中值的不可变引用。`iter` 方法会生成一个遍历不可变引用的迭代器。如果想创建一个取得 `v1` 所有权并返回自有值的迭代器，可以调用 `into_iter` 而不是 `iter`。同样，如果想遍历可变引用，可以调用 `iter_mut` 而不是 `iter`。
+### 消费迭代器的方法
+`Iterator` 特质有许多由标准库提供默认实现的方法；可以查阅标准库 API 文档中的 `Iterator` 特质来了解这些方法。其中一些方法会在定义中调用 `next`，这就是实现 `next` 特质时必须实现 `Iterator` 方法的原因。
+调用 `next` 的方法称为“消费适配器”，因为调用它们会耗尽迭代器。一个例子是 `sum` 方法：它取得迭代器的所有权，并通过反复调用 `next` 遍历项目，从而消费迭代器。遍历过程中，它会把每个项目加到运行总和中，并在迭代完成后返回总和。清单 13-13 中有一个测试，演示了 `sum` 方法的用法。
 
-Also note that the values we get from the calls to `next` are immutable
-references to the values in the vector. The `iter` method produces an iterator
-over immutable references. If we want to create an iterator that takes
-ownership of `v1` and returns owned values, we can call `into_iter` instead of
-`iter`. Similarly, if we want to iterate over mutable references, we can call
-`iter_mut` instead of `iter`.
-
-### Methods That Consume the Iterator
-
-The `Iterator` trait has a number of different methods with default
-implementations provided by the standard library; you can find out about these
-methods by looking in the standard library API documentation for the `Iterator`
-trait. Some of these methods call the `next` method in their definition, which
-is why you’re required to implement the `next` method when implementing the
-`Iterator` trait.
-
-Methods that call `next` are called _consuming adapters_ because calling them
-uses up the iterator. One example is the `sum` method, which takes ownership of
-the iterator and iterates through the items by repeatedly calling `next`, thus
-consuming the iterator. As it iterates through, it adds each item to a running
-total and returns the total when iteration is complete. Listing 13-13 has a
-test illustrating a use of the `sum` method.
-
-<Listing number="13-13" file-name="src/lib.rs" caption="Calling the `sum` method to get the total of all items in the iterator">
+<Listing number="13-13" file-name="src/lib.rs" caption="调用 `sum` 方法获取迭代器中所有项目的总和">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-13/src/lib.rs:here}}
 ```
 
+
 </Listing>
 
-We aren’t allowed to use `v1_iter` after the call to `sum`, because `sum` takes
-ownership of the iterator we call it on.
+调用 `v1_iter` 后不允许再使用 `sum`，因为 `sum` 会取得我们调用它的迭代器的所有权。
+### 产生其他迭代器的方法
+所谓迭代器适配器，是定义在 `Iterator` 特质中的方法，它们不会消费迭代器。相反，它们会通过改变原始迭代器的某些方面来生成不同的迭代器。
+清单 13-14 展示了调用迭代器适配器方法 `map` 的示例。该方法接收一个闭包，在遍历迭代器项目时对每个项目调用这个闭包。`map` 方法返回一个生成修改后项目的新迭代器。此处的闭包会创建一个新迭代器，使矢量中的每个项目都增加 1。
 
-### Methods That Produce Other Iterators
-
-_Iterator adapters_ are methods defined on the `Iterator` trait that don’t
-consume the iterator. Instead, they produce different iterators by changing
-some aspect of the original iterator.
-
-Listing 13-14 shows an example of calling the iterator adapter method `map`,
-which takes a closure to call on each item as the items are iterated through.
-The `map` method returns a new iterator that produces the modified items. The
-closure here creates a new iterator in which each item from the vector will be
-incremented by 1.
-
-<Listing number="13-14" file-name="src/main.rs" caption="Calling the iterator adapter `map` to create a new iterator">
+<Listing number="13-14" file-name="src/main.rs" caption="调用迭代器适配器 `map` 来创建新的迭代器">
 
 ```rust,not_desired_behavior
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-14/src/main.rs:here}}
 ```
 
+
 </Listing>
 
-However, this code produces a warning:
+但是，这段代码会产生一条警告：
 
 ```console
 {{#include ../listings/ch13-functional-features/listing-13-14/output.txt}}
 ```
 
-The code in Listing 13-14 doesn’t do anything; the closure we’ve specified
-never gets called. The warning reminds us why: Iterator adapters are lazy, and
-we need to consume the iterator here.
 
-To fix this warning and consume the iterator, we’ll use the `collect` method,
-which we used with `env::args` in Listing 12-1. This method consumes the
-iterator and collects the resultant values into a collection data type.
+清单 13-14 中的代码没有执行任何操作；我们指定的闭包从未被调用。警告提醒了我们原因：迭代器适配器是惰性的，因此这里需要消费迭代器。
+闭包捕获环境中的 `collect` 参数，并与每双鞋子比较该值，仅保留指定尺码的鞋子。最后，调用 `env::args` 方法收集将调整后的迭代器返回的值，到一个该函数返回的矢量中。
+在清单 13-15 中，我们将遍历调用 `map` 返回的迭代器所得到的结果收集到一个矢量中。这个矢量最终会包含原矢量中的每个项目，并且每个项目都增加 1。
 
-In Listing 13-15, we collect the results of iterating over the iterator that’s
-returned from the call to `map` into a vector. This vector will end up
-containing each item from the original vector, incremented by 1.
-
-<Listing number="13-15" file-name="src/main.rs" caption="Calling the `map` method to create a new iterator, and then calling the `collect` method to consume the new iterator and create a vector">
+<Listing number="13-15" file-name="src/main.rs" caption="调用 `map` 方法创建一个新的迭代器，然后调用 `collect` 方法消费新的迭代器并创建一个矢量值">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-15/src/main.rs:here}}
 ```
 
+
 </Listing>
 
-Because `map` takes a closure, we can specify any operation we want to perform
-on each item. This is a great example of how closures let you customize some
-behavior while reusing the iteration behavior that the `Iterator` trait
-provides.
-
-You can chain multiple calls to iterator adapters to perform complex actions in
-a readable way. But because all iterators are lazy, you have to call one of the
-consuming adapter methods to get results from calls to iterator adapters.
-
+由于 `map` 接收一个闭包，因此可以指定想对每个项目执行的任意操作。这很好地展示了闭包如何让我们在复用 `Iterator` 特质提供的迭代行为的同时，自定义部分行为。
+我们可以链式调用多个迭代器适配器，以可读的方式执行复杂操作。但由于所有迭代器都是惰性的，因此必须调用某个消费适配器方法，才能得到调用迭代器适配器的结果。
 <!-- Old headings. Do not remove or links may break. -->
-
 <a id="using-closures-that-capture-their-environment"></a>
+### 捕获环境的闭包
+许多迭代器适配器会接收闭包作为参数，而我们通常指定给迭代器适配器的闭包会捕获它们的环境。
+在这个示例中，我们将使用接收闭包的 `filter` 方法。闭包从迭代器中取得一个项目并返回 `bool`。如果闭包返回 `true`，该值就会包含在 `filter` 生成的迭代器中；如果闭包返回 `false`，该值就不会被包含。
+在清单 13-16 中，我们使用一个捕获环境中 `filter` 变量的闭包调用 `shoe_size`，遍历 `Shoe` 结构体实例的集合。它只会返回指定尺码的鞋子。
 
-### Closures That Capture Their Environment
-
-Many iterator adapters take closures as arguments, and commonly the closures
-we’ll specify as arguments to iterator adapters will be closures that capture
-their environment.
-
-For this example, we’ll use the `filter` method that takes a closure. The
-closure gets an item from the iterator and returns a `bool`. If the closure
-returns `true`, the value will be included in the iterator produced by
-`filter`. If the closure returns `false`, the value won’t be included.
-
-In Listing 13-16, we use `filter` with a closure that captures the `shoe_size`
-variable from its environment to iterate over a collection of `Shoe` struct
-instances. It will return only shoes that are the specified size.
-
-<Listing number="13-16" file-name="src/lib.rs" caption="Using the `filter` method with a closure that captures `shoe_size`">
+<Listing number="13-16" file-name="src/lib.rs" caption="以一个捕获 `filter` 的闭包使用 `shoe_size` 方法">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-16/src/lib.rs}}
 ```
 
+
 </Listing>
 
-The `shoes_in_size` function takes ownership of a vector of shoes and a shoe
-size as parameters. It returns a vector containing only shoes of the specified
-size.
+测试表明，当我们调用 `shoes_in_size` 时，返回的只有与指定的值相同尺码的鞋子。
 
-In the body of `shoes_in_size`, we call `into_iter` to create an iterator that
-takes ownership of the vector. Then, we call `filter` to adapt that iterator
-into a new iterator that only contains elements for which the closure returns
-`true`.
-
-The closure captures the `shoe_size` parameter from the environment and
-compares the value with each shoe’s size, keeping only shoes of the size
-specified. Finally, calling `collect` gathers the values returned by the
-adapted iterator into a vector that’s returned by the function.
-
-The test shows that when we call `shoes_in_size`, we get back only shoes that
-have the same size as the value we specified.
+在 `shoes_in_size` 的主体中，我们调用 `into_iter` 来创建一个取得矢量所有权的迭代器。然后调用 `filter`，将该迭代器调整为一个新迭代器，只包含闭包返回 `true` 的元素。
+闭包从环境中捕获 `shoe_size` 参数，并将该值与每双鞋的尺码比较，只保留指定尺码的鞋子。最后，调用 `collect` 将调整后迭代器返回的值收集到函数返回的矢量中。
+测试表明，调用 `shoes_in_size` 时，返回的只有与指定值尺码相同的鞋子。

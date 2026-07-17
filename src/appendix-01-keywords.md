@@ -1,70 +1,58 @@
-## Appendix A: Keywords
+## 附录 A：关键字
 
-The following lists contain keywords that are reserved for current or future
-use by the Rust language. As such, they cannot be used as identifiers (except
-as raw identifiers, as we discuss in the [“Raw
-Identifiers”][raw-identifiers]<!-- ignore --> section). _Identifiers_ are names
-of functions, variables, parameters, struct fields, modules, crates, constants,
-macros, static values, attributes, types, traits, or lifetimes.
+以下列表包含 Rust 语言当前或预留给 Rust 语言今后使用的关键字。因此，他们不能用作标识符（作为“原始标识符”的情况除外，我们将在 [“Raw
+Identifiers”][raw-identifiers] 小节中讨论）。所谓 *标识符*，是指函数、变量、参数、结构体字段、模组、代码箱、常量、宏、静态值、属性、类型、特质或生命周期等的名字。 <!-- ignore -->
 
-[raw-identifiers]: #raw-identifiers
 
-### Keywords Currently in Use
 
-The following is a list of keywords currently in use, with their functionality
-described.
+### 当前在用的关键字
 
-- **`as`**: Perform primitive casting, disambiguate the specific trait
-  containing an item, or rename items in `use` statements.
-- **`async`**: Return a `Future` instead of blocking the current thread.
-- **`await`**: Suspend execution until the result of a `Future` is ready.
-- **`break`**: Exit a loop immediately.
-- **`const`**: Define constant items or constant raw pointers.
-- **`continue`**: Continue to the next loop iteration.
-- **`crate`**: In a module path, refers to the crate root.
-- **`dyn`**: Dynamic dispatch to a trait object.
-- **`else`**: Fallback for `if` and `if let` control flow constructs.
-- **`enum`**: Define an enumeration.
-- **`extern`**: Link an external function or variable.
-- **`false`**: Boolean false literal.
-- **`fn`**: Define a function or the function pointer type.
-- **`for`**: Loop over items from an iterator, implement a trait, or specify a
-  higher ranked lifetime.
-- **`if`**: Branch based on the result of a conditional expression.
-- **`impl`**: Implement inherent or trait functionality.
-- **`in`**: Part of `for` loop syntax.
-- **`let`**: Bind a variable.
-- **`loop`**: Loop unconditionally.
-- **`match`**: Match a value to patterns.
-- **`mod`**: Define a module.
-- **`move`**: Make a closure take ownership of all its captures.
-- **`mut`**: Denote mutability in references, raw pointers, or pattern bindings.
-- **`pub`**: Denote public visibility in struct fields, `impl` blocks, or
-  modules.
-- **`ref`**: Bind by reference.
-- **`return`**: Return from function.
-- **`Self`**: A type alias for the type we are defining or implementing.
-- **`self`**: Method subject or current module.
-- **`static`**: Global variable or lifetime lasting the entire program
-  execution.
-- **`struct`**: Define a structure.
-- **`super`**: Parent module of the current module.
-- **`trait`**: Define a trait.
-- **`true`**: Boolean true literal.
-- **`type`**: Define a type alias or associated type.
-- **`union`**: Define a [union][union]<!-- ignore -->; is a keyword only when
-  used in a union declaration.
-- **`unsafe`**: Denote unsafe code, functions, traits, or implementations.
-- **`use`**: Bring symbols into scope.
-- **`where`**: Denote clauses that constrain a type.
-- **`while`**: Loop conditionally based on the result of an expression.
+以下是当前在用关键字的列表，及其功能描述。
 
-[union]: ../reference/items/unions.html
+- `as`：执行基本类型转换，消除包含某个项目的具体特质的歧义，或重命名 `use` 语句中的项目；
+- `async`：返回一个 `Future`，而非阻塞当前线程；
+- `await`：暂停执行，知道 `Future` 值的结果就绪;
+- `break`：立即退出循环；
+- `const`：定义常量项目或常量原始指针；
+- `continue`：继续下一循环迭代；
+- `crate`：在模组路径中，指向代码箱根;
+- `dyn`：对特质对象执行动态分派，参考 [union][union]；
+- `else`：`if` 和 `if let` 控制流结构的后备；
+- `enum`：链接外部函数或变量；
+- `extern`：布尔值假的字面值；
+- `false`：定义函数或函数指针类型；
+- `fn`：遍历迭代器中的项目、实现特质，或指定更高阶的生命周期，a higher-ranked lifetime;
+- `for`：根据条件表达式的结果分支；
+- `if`：实现固有的或特质的功能，implement inherent or trait functionality;
+- `impl`：`in` 循环语法的一部分；
+- `for`：绑定变量；
+- `let`：无条件循环；
+- `loop`：将值与模式匹配；
+- `match`：定义模组；
+- `mod`：使闭包取得其所有捕获值的所有权；
+- `move`：表示引用、原始指针或模式绑定中的可变性；
+- `mut`：表示结构体、`pub` 代码块或模组中的公开可见性；
+- `impl`：按（通过？）引用绑定；
+- `ref`：从函数返回；
+- `return`：我们正在定义或实现的类型的类型别名；
+- `Self`：方法的主体或当前模组；
+- `self`：全局变量，或贯穿整个程序执行过程的生命周期；
+- `static`：定义结构体；
+- `struct`：当前模组的父模组；
+- `super`：定义特质；
+- `trait`：布尔值真的字面值；
+- `true`：定义类型别名或关联类型；
+- `type`：定义 联合体；仅在联合体声明中使用是才是关键字;
+- `union`：表示不安全代码、函数、特质或实现；
+- `unsafe`：带入符号到作用域;
+- `use`：表示约束类型的子句；
+- `where`：根据表达式的结果有条件地循环。 `while` <!-- ignore -->
 
-### Keywords Reserved for Future Use
 
-The following keywords do not yet have any functionality but are reserved by
-Rust for potential future use:
+
+### 保留供今后使用的关键字
+
+以下关键字尚无任何功能，但被 Rust 保留供今后使用。
 
 - `abstract`
 - `become`
@@ -81,15 +69,13 @@ Rust for potential future use:
 - `virtual`
 - `yield`
 
-### Raw Identifiers
+### 原始标识符
 
-_Raw identifiers_ are the syntax that lets you use keywords where they wouldn’t
-normally be allowed. You use a raw identifier by prefixing a keyword with `r#`.
+所谓 *原始标识符*，属于一种语法，允许咱们在通常不允许使用地方使用关键字。咱们可以通过在关键字前加上 `r#` 来使用原始标识符。
 
-For example, `match` is a keyword. If you try to compile the following function
-that uses `match` as its name:
+例如，`match` 是个关键字。当咱们尝试编译以下使用 `match` 作为函数名字的函数时：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust,ignore,does_not_compile
 fn match(needle: &str, haystack: &str) -> bool {
@@ -97,7 +83,7 @@ fn match(needle: &str, haystack: &str) -> bool {
 }
 ```
 
-you’ll get this error:
+咱们将得到下面这个报错：
 
 ```text
 error: expected identifier, found keyword `match`
@@ -107,11 +93,9 @@ error: expected identifier, found keyword `match`
   |    ^^^^^ expected identifier, found keyword
 ```
 
-The error shows that you can’t use the keyword `match` as the function
-identifier. To use `match` as a function name, you need to use the raw
-identifier syntax, like this:
+报错表明，咱们不能使用关键字 `match` 作为函数标识符。要使用 `match` 作为函数名字，咱们需要使用 *原始标识符语法*，像下面这样：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust
 fn r#match(needle: &str, haystack: &str) -> bool {
@@ -123,18 +107,10 @@ fn main() {
 }
 ```
 
-This code will compile without any errors. Note the `r#` prefix on the function
-name in its definition as well as where the function is called in `main`.
+这段代码将在没有任何错误下编译。请注意函数定义中，以及 `r#` 中函数被调用处，函数名字上的 `main` 前缀。
 
-Raw identifiers allow you to use any word you choose as an identifier, even if
-that word happens to be a reserved keyword. This gives us more freedom to choose
-identifier names, as well as lets us integrate with programs written in a
-language where these words aren’t keywords. In addition, raw identifiers allow
-you to use libraries written in a different Rust edition than your crate uses.
-For example, `try` isn’t a keyword in the 2015 edition but is in the 2018, 2021,
-and 2024 editions. If you depend on a library that is written using the 2015
-edition and has a `try` function, you’ll need to use the raw identifier syntax,
-`r#try` in this case, to call that function from your code on later editions.
-See [Appendix E][appendix-e]<!-- ignore --> for more information on editions.
+原始标识符允许咱们使用所选的任何单词作为标识符，即使该单词恰好是保留关键字。这给予了我们更多自由来选择标识符名字，同时也让我们可以与那些以其中这些单词不是关键字的语言编写的程序集成。此外，原始标识符允许咱们使用与咱们代码箱使用的 Rust 版本不同的代码箱。例如，`try` 在 2015 版中不是个关键字，但在 2018、2021 和 2024 版中却是。当咱们依赖某个使用 2015 版本编写的库，并有个 `try` 函数时，咱们将需要使用原始标识符语法，在这种情况下的 `r#try`，以在更高版本的代码中调用该函数。有关版本的更多信息，请参阅 [Appendix E][appendix-e] 。 <!-- ignore -->
 
+[raw-identifiers]: #raw-identifiers
+[union]: ../reference/items/unions.html
 [appendix-e]: appendix-05-editions.html

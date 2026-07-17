@@ -1,79 +1,42 @@
-## Refactoring to Improve Modularity and Error Handling
+## 重构以改进模块化和错误处理
 
-To improve our program, we’ll fix four problems that have to do with the
-program’s structure and how it’s handling potential errors. First, our `main`
-function now performs two tasks: It parses arguments and reads files. As our
-program grows, the number of separate tasks the `main` function handles will
-increase. As a function gains responsibilities, it becomes more difficult to
-reason about, harder to test, and harder to change without breaking one of its
-parts. It’s best to separate functionality so that each function is responsible
-for one task.
+为了改进程序，我们要解决四个与程序结构和潜在错误处理方式有关的问题。首先，我们的 `main` 函数现在执行两项任务：解析参数和读取文件。随着程序增长，`main` 函数处理的独立任务会越来越多。函数承担的职责越多，就越难理解，也越难测试；如果要修改其中一部分，还更容易破坏其他部分。最好将功能分离，让每个函数只负责一项任务。
 
-This issue also ties into the second problem: Although `query` and `file_path`
-are configuration variables to our program, variables like `contents` are used
-to perform the program’s logic. The longer `main` becomes, the more variables
-we’ll need to bring into scope; the more variables we have in scope, the harder
-it will be to keep track of the purpose of each. It’s best to group the
-configuration variables into one structure to make their purpose clear.
+这个问题也与第二个问题有关：虽然 `query` 和 `file_path` 是程序的配置变量，但 `contents` 这样的变量用于执行程序逻辑。`main` 越长，我们就需要将越多变量引入作用域；作用域中的变量越多，就越难追踪每个变量的用途。最好把配置变量组合到一个结构体中，让它们的用途更加清晰。
 
-The third problem is that we’ve used `expect` to print an error message when
-reading the file fails, but the error message just prints `Should have been
-able to read the file`. Reading a file can fail in a number of ways: For
-example, the file could be missing, or we might not have permission to open it.
-Right now, regardless of the situation, we’d print the same error message for
-everything, which wouldn’t give the user any information!
+第三个问题是，我们使用 `expect` 在读取文件失败时打印错误消息，但这条错误消息只会打印 `Should have been
+able to read the file`。读取文件可能因多种原因失败：例如文件可能不存在，或者我们没有打开它的权限。现在无论具体情况如何，我们都会对所有错误打印同一条消息，这无法向用户提供任何信息！
 
-Fourth, we use `expect` to handle an error, and if the user runs our program
-without specifying enough arguments, they’ll get an `index out of bounds` error
-from Rust that doesn’t clearly explain the problem. It would be best if all the
-error-handling code were in one place so that future maintainers had only one
-place to consult the code if the error-handling logic needed to change. Having
-all the error-handling code in one place will also ensure that we’re printing
-messages that will be meaningful to our end users.
+第四个问题是，我们使用 `expect` 处理错误；如果用户运行程序时没有指定足够的参数，就会得到 Rust 的 `index out of bounds` 错误，而这没有清楚地解释问题。如果所有错误处理代码都集中在一个地方，未来的维护者在需要修改错误处理逻辑时就只需查阅一处代码，那会更好。把所有错误处理代码放在一起，还能确保我们打印的消息对最终用户有意义。
 
-Let’s address these four problems by refactoring our project.
+让我们通过重构项目来解决这四个问题。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="separation-of-concerns-for-binary-projects"></a>
 
-### Separating Concerns in Binary Projects
+### 分离二进制项目中的关注点
 
-The organizational problem of allocating responsibility for multiple tasks to
-the `main` function is common to many binary projects. As a result, many Rust
-programmers find it useful to split up the separate concerns of a binary
-program when the `main` function starts getting large. This process has the
-following steps:
+在许多二进制项目中，把多个任务的职责都分配给 `main` 函数是很常见的组织问题。因此，许多 Rust 程序员发现，当 `main` 函数开始变大时，拆分二进制程序中的不同关注点很有用。这个过程包含以下步骤：
 
-- Split your program into a _main.rs_ file and a _lib.rs_ file and move your
-  program’s logic to _lib.rs_.
-- As long as your command line parsing logic is small, it can remain in
-  the `main` function.
-- When the command line parsing logic starts getting complicated, extract it
-  from the `main` function into other functions or types.
+- 将程序拆分为 _main.rs_ 文件和 _lib.rs_ 文件，并将程序逻辑移到 _lib.rs_ 中。
+- 只要命令行解析逻辑还比较小，就可以保留在 `main` 函数中。
+- 当命令行解析逻辑开始变得复杂时，就把它从 `main` 函数提取到其他函数或类型中。
 
-The responsibilities that remain in the `main` function after this process
-should be limited to the following:
+经过这个过程后，`main` 函数保留的职责应当局限于以下内容：
 
-- Calling the command line parsing logic with the argument values
-- Setting up any other configuration
-- Calling a `run` function in _lib.rs_
-- Handling the error if `run` returns an error
+- 使用参数值调用命令行解析逻辑
+- 设置其他配置
+- 调用 _lib.rs_ 中的 `run` 函数
+- 处理 `run` 返回的错误
 
-This pattern is about separating concerns: _main.rs_ handles running the
-program and _lib.rs_ handles all the logic of the task at hand. Because you
-can’t test the `main` function directly, this structure lets you test all of
-your program’s logic by moving it out of the `main` function. The code that
-remains in the `main` function will be small enough to verify its correctness
-by reading it. Let’s rework our program by following this process.
+这种模式的核心是分离关注点：_main.rs_ 负责运行程序，_lib.rs_ 负责当前任务的全部逻辑。由于不能直接测试 `main` 函数，这种结构把程序逻辑移出 `main` 后，就能测试程序的所有逻辑。留在 `main` 函数中的代码会足够小，可以通过阅读来验证其正确性。让我们遵循这个过程重新组织程序。
 
-#### Extracting the Argument Parser
+#### 提取参数解析器
 
-We’ll extract the functionality for parsing arguments into a function that
-`main` will call. Listing 12-5 shows the new start of the `main` function that
-calls a new function `parse_config`, which we’ll define in _src/main.rs_.
+我们要把解析参数的功能提取到一个由 `main` 调用的函数中。清单 12-5 展示了 `main` 函数的新开头，它会调用我们将在 _src/main.rs_ 中定义的新函数 `parse_config`。
 
-<Listing number="12-5" file-name="src/main.rs" caption="Extracting a `parse_config` function from `main`">
+<Listing number="12-5" file-name="src/main.rs" caption="从 `parse_config` 中提取 `main` 函数">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-05/src/main.rs:here}}
@@ -81,40 +44,19 @@ calls a new function `parse_config`, which we’ll define in _src/main.rs_.
 
 </Listing>
 
-We’re still collecting the command line arguments into a vector, but instead of
-assigning the argument value at index 1 to the variable `query` and the
-argument value at index 2 to the variable `file_path` within the `main`
-function, we pass the whole vector to the `parse_config` function. The
-`parse_config` function then holds the logic that determines which argument
-goes in which variable and passes the values back to `main`. We still create
-the `query` and `file_path` variables in `main`, but `main` no longer has the
-responsibility of determining how the command line arguments and variables
-correspond.
+我们仍然把命令行参数收集到向量中，但不再在 `query` 函数中把索引 1 处的参数值赋给变量 `file_path`、把索引 2 处的参数值赋给变量 `main`，而是把整个向量传给 `parse_config` 函数。`parse_config` 函数负责确定每个参数应放入哪个变量，并把这些值传回 `main`。我们仍在 `query` 中创建 `file_path` 和 `main` 变量，但 `main` 不再负责确定命令行参数与变量之间的对应关系。
 
-This rework may seem like overkill for our small program, but we’re refactoring
-in small, incremental steps. After making this change, run the program again to
-verify that the argument parsing still works. It’s good to check your progress
-often, to help identify the cause of problems when they occur.
+对于这个小程序来说，这次改动看起来可能有些过度，但我们正在以小步、渐进的方式进行重构。完成改动后，再次运行程序，确认参数解析仍然正常。经常检查进度是个好习惯，有助于在问题出现时找出原因。
 
-#### Grouping Configuration Values
+#### 组合配置值
 
-We can take another small step to improve the `parse_config` function further.
-At the moment, we’re returning a tuple, but then we immediately break that
-tuple into individual parts again. This is a sign that perhaps we don’t have
-the right abstraction yet.
+我们还可以再迈出一小步，进一步改进 `parse_config` 函数。目前我们返回一个元组，但紧接着又立即把元组拆成各个部分。这说明我们可能还没有找到正确的抽象。
 
-Another indicator that shows there’s room for improvement is the `config` part
-of `parse_config`, which implies that the two values we return are related and
-are both part of one configuration value. We’re not currently conveying this
-meaning in the structure of the data other than by grouping the two values into
-a tuple; we’ll instead put the two values into one struct and give each of the
-struct fields a meaningful name. Doing so will make it easier for future
-maintainers of this code to understand how the different values relate to each
-other and what their purpose is.
+另一个表明仍有改进空间的地方是 `config` 中的 `parse_config` 部分，它暗示我们返回的两个值彼此相关，并且都是一个配置值的一部分。目前，除了把两个值组合成元组，我们没有在数据结构中表达这种含义；接下来会把两个值放进一个结构体，并为结构体字段取有意义的名字。这样，未来维护这段代码的人就更容易理解不同值之间的关系及其用途。
 
-Listing 12-6 shows the improvements to the `parse_config` function.
+清单 12-6 展示了对 `parse_config` 函数的改进。
 
-<Listing number="12-6" file-name="src/main.rs" caption="Refactoring `parse_config` to return an instance of a `Config` struct">
+<Listing number="12-6" file-name="src/main.rs" caption="重构 `parse_config` 以返回 `Config` 结构体实例">
 
 ```rust,should_panic,noplayground
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-06/src/main.rs:here}}
@@ -122,65 +64,25 @@ Listing 12-6 shows the improvements to the `parse_config` function.
 
 </Listing>
 
-We’ve added a struct named `Config` defined to have fields named `query` and
-`file_path`. The signature of `parse_config` now indicates that it returns a
-`Config` value. In the body of `parse_config`, where we used to return
-string slices that reference `String` values in `args`, we now define `Config`
-to contain owned `String` values. The `args` variable in `main` is the owner of
-the argument values and is only letting the `parse_config` function borrow
-them, which means we’d violate Rust’s borrowing rules if `Config` tried to take
-ownership of the values in `args`.
+我们添加了一个名为 `Config` 的结构体，并为它定义了名为 `query` 和 `file_path` 的字段。现在，`parse_config` 的签名表明它返回一个 `Config` 值。在 `parse_config` 的函数体中，我们原本返回引用 `String` 中 `args` 值的字符串切片；现在则将 `Config` 定义为包含拥有所有权的 `String` 值。`args` 中的 `main` 变量拥有参数值，只允许 `parse_config` 函数借用这些值；这意味着如果 `Config` 试图取得 `args` 中值的所有权，就会违反 Rust 的借用规则。
 
-There are a number of ways we could manage the `String` data; the easiest,
-though somewhat inefficient, route is to call the `clone` method on the values.
-This will make a full copy of the data for the `Config` instance to own, which
-takes more time and memory than storing a reference to the string data.
-However, cloning the data also makes our code very straightforward because we
-don’t have to manage the lifetimes of the references; in this circumstance,
-giving up a little performance to gain simplicity is a worthwhile trade-off.
+我们有多种方式管理 `String` 数据；最简单但效率略低的方法，是对这些值调用 `clone` 方法。这会完整复制数据，让 `Config` 实例拥有副本，相比存储字符串数据的引用会消耗更多时间和内存。不过，克隆数据也让代码非常直接，因为我们不必管理引用的生命周期；在这种情况下，牺牲一点性能换取简单性是值得的权衡。
 
-> ### The Trade-Offs of Using `clone`
+> ### 使用 `clone` 的权衡
 >
-> There’s a tendency among many Rustaceans to avoid using `clone` to fix
-> ownership problems because of its runtime cost. In
-> [Chapter 13][ch13]<!-- ignore -->, you’ll learn how to use more efficient
-> methods in this type of situation. But for now, it’s okay to copy a few
-> strings to continue making progress because you’ll make these copies only
-> once and your file path and query string are very small. It’s better to have
-> a working program that’s a bit inefficient than to try to hyperoptimize code
-> on your first pass. As you become more experienced with Rust, it’ll be
-> easier to start with the most efficient solution, but for now, it’s
-> perfectly acceptable to call `clone`.
+> 许多 Rustacean 会因为 `clone` 的运行时成本而倾向于避免用它解决所有权问题。在[第 13 章][ch13]<!-- ignore -->中，你会学习如何在这类情况下使用更高效的方法。不过现在，复制几个字符串来继续推进完全没问题，因为这些复制只会发生一次，而且文件路径和查询字符串都很小。与其第一次实现就尝试过度优化代码，不如先拥有一个稍微低效但能正常工作的程序。随着 Rust 经验增加，从最高效的解决方案开始会更容易；但现在，调用 `clone` 完全可以接受。
 
-We’ve updated `main` so that it places the instance of `Config` returned by
-`parse_config` into a variable named `config`, and we updated the code that
-previously used the separate `query` and `file_path` variables so that it now
-uses the fields on the `Config` struct instead.
+我们更新了 `main`，把 `Config` 返回的 `parse_config` 实例放入名为 `config` 的变量中；同时更新了原来使用独立 `query` 和 `file_path` 变量的代码，使其改用 `Config` 结构体中的字段。
 
-Now our code more clearly conveys that `query` and `file_path` are related and
-that their purpose is to configure how the program will work. Any code that
-uses these values knows to find them in the `config` instance in the fields
-named for their purpose.
+现在，代码更清楚地表达了 `query` 和 `file_path` 彼此相关，并且它们的用途是配置程序的工作方式。任何使用这些值的代码，都知道应该在 `config` 实例中按用途命名的字段里找到它们。
 
-#### Creating a Constructor for `Config`
+#### 为 `Config` 创建构造函数
 
-So far, we’ve extracted the logic responsible for parsing the command line
-arguments from `main` and placed it in the `parse_config` function. Doing so
-helped us see that the `query` and `file_path` values were related, and that
-relationship should be conveyed in our code. We then added a `Config` struct to
-name the related purpose of `query` and `file_path` and to be able to return the
-values’ names as struct field names from the `parse_config` function.
+到目前为止，我们已经把负责解析命令行参数的逻辑从 `main` 提取出来，并放入 `parse_config` 函数。这让我们看出 `query` 和 `file_path` 两个值彼此相关，而这种关系应该在代码中表达出来。于是，我们添加了 `Config` 结构体，为 `query` 和 `file_path` 的共同用途提供名称，并让 `parse_config` 函数能够以结构体字段名的形式返回这些值的名称。
 
-So, now that the purpose of the `parse_config` function is to create a `Config`
-instance, we can change `parse_config` from a plain function to a function
-named `new` that is associated with the `Config` struct. Making this change
-will make the code more idiomatic. We can create instances of types in the
-standard library, such as `String`, by calling `String::new`. Similarly, by
-changing `parse_config` into a `new` function associated with `Config`, we’ll
-be able to create instances of `Config` by calling `Config::new`. Listing 12-7
-shows the changes we need to make.
+既然 `parse_config` 函数的用途是创建 `Config` 实例，我们就可以把 `parse_config` 从普通函数改成一个与 `new` 结构体关联、名为 `Config` 的函数。这样会让代码更符合惯用写法。我们可以通过调用 `String` 创建标准库类型（例如 `String::new`）的实例。同样，把 `parse_config` 改成与 `new` 关联的 `Config` 函数后，就能通过调用 `Config` 创建 `Config::new` 实例。清单 12-7 展示了需要进行的修改。
 
-<Listing number="12-7" file-name="src/main.rs" caption="Changing `parse_config` into `Config::new`">
+<Listing number="12-7" file-name="src/main.rs" caption="将 `parse_config` 改为 `Config::new`">
 
 ```rust,should_panic,noplayground
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-07/src/main.rs:here}}
@@ -188,33 +90,23 @@ shows the changes we need to make.
 
 </Listing>
 
-We’ve updated `main` where we were calling `parse_config` to instead call
-`Config::new`. We’ve changed the name of `parse_config` to `new` and moved it
-within an `impl` block, which associates the `new` function with `Config`. Try
-compiling this code again to make sure it works.
+我们更新了 `main`，把原来调用 `parse_config` 的地方改为调用 `Config::new`。我们还将 `parse_config` 改名为 `new`，并把它移入 `impl` 块中，使 `new` 函数与 `Config` 关联。再次编译这段代码，确认它能正常工作。
 
-### Fixing the Error Handling
+### 修复错误处理
 
-Now we’ll work on fixing our error handling. Recall that attempting to access
-the values in the `args` vector at index 1 or index 2 will cause the program to
-panic if the vector contains fewer than three items. Try running the program
-without any arguments; it will look like this:
+现在来修复错误处理。回想一下，如果 `args` 向量包含的项目少于三个，尝试访问索引 1 或索引 2 处的值就会导致程序 panic。尝试不带任何参数运行程序，结果会如下所示：
 
 ```console
 {{#include ../listings/ch12-an-io-project/listing-12-07/output.txt}}
 ```
 
-The line `index out of bounds: the len is 1 but the index is 1` is an error
-message intended for programmers. It won’t help our end users understand what
-they should do instead. Let’s fix that now.
+其中的 `index out of bounds: the len is 1 but the index is 1` 是面向程序员的错误消息。它无法帮助最终用户理解应该怎么做。现在就来修复它。
 
-#### Improving the Error Message
+#### 改进错误消息
 
-In Listing 12-8, we add a check in the `new` function that will verify that the
-slice is long enough before accessing index 1 and index 2. If the slice isn’t
-long enough, the program panics and displays a better error message.
+在清单 12-8 中，我们在 `new` 函数中添加检查，在访问索引 1 和索引 2 之前验证切片长度是否足够。如果切片长度不够，程序就会 panic 并显示更好的错误消息。
 
-<Listing number="12-8" file-name="src/main.rs" caption="Adding a check for the number of arguments">
+<Listing number="12-8" file-name="src/main.rs" caption="添加检查参数数量的代码">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-08/src/main.rs:here}}
@@ -222,50 +114,28 @@ long enough, the program panics and displays a better error message.
 
 </Listing>
 
-This code is similar to [the `Guess::new` function we wrote in Listing
-9-13][ch9-custom-types]<!-- ignore -->, where we called `panic!` when the
-`value` argument was out of the range of valid values. Instead of checking for
-a range of values here, we’re checking that the length of `args` is at least
-`3` and the rest of the function can operate under the assumption that this
-condition has been met. If `args` has fewer than three items, this condition
-will be `true`, and we call the `panic!` macro to end the program immediately.
+这段代码类似于[我们在清单 9-13 中编写的 `Guess::new` 函数][ch9-custom-types]<!-- ignore -->：当 `panic!` 参数超出有效值范围时，我们调用 `value`。这里不检查值的范围，而是检查 `args` 的长度至少为 `3`，这样函数的其余部分就可以假定这个条件已经满足。如果 `args` 少于三个项目，这个条件就为 `true`，我们会调用 `panic!` 宏立即结束程序。
 
-With these extra few lines of code in `new`, let’s run the program without any
-arguments again to see what the error looks like now:
+在 `new` 中添加这几行代码后，再次不带参数运行程序，看看现在的错误是什么样：
 
 ```console
 {{#include ../listings/ch12-an-io-project/listing-12-08/output.txt}}
 ```
 
-This output is better: We now have a reasonable error message. However, we also
-have extraneous information we don’t want to give to our users. Perhaps the
-technique we used in Listing 9-13 isn’t the best one to use here: A call to
-`panic!` is more appropriate for a programming problem than a usage problem,
-[as discussed in Chapter 9][ch9-error-guidelines]<!-- ignore -->. Instead,
-we’ll use the other technique you learned about in Chapter 9—[returning a
-`Result`][ch9-result]<!-- ignore --> that indicates either success or an error.
+这个输出更好了：现在有了一条合理的错误消息。不过，其中还有一些我们不希望提供给用户的多余信息。也许清单 9-13 使用的技术并不适合这里：正如[第 9 章所讨论的][ch9-error-guidelines]<!-- ignore -->，调用 `panic!` 更适合处理编程问题，而不是使用问题。相反，我们会使用在第 9 章学到的另一种技术——[返回 `Result`][ch9-result]<!-- ignore -->，用它表示成功或错误。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="returning-a-result-from-new-instead-of-calling-panic"></a>
 
-#### Returning a `Result` Instead of Calling `panic!`
+#### 返回 `Result` 而不是调用 `panic!`
 
-We can instead return a `Result` value that will contain a `Config` instance in
-the successful case and will describe the problem in the error case. We’re also
-going to change the function name from `new` to `build` because many
-programmers expect `new` functions to never fail. When `Config::build` is
-communicating to `main`, we can use the `Result` type to signal there was a
-problem. Then, we can change `main` to convert an `Err` variant into a more
-practical error for our users without the surrounding text about `thread
-'main'` and `RUST_BACKTRACE` that a call to `panic!` causes.
+我们可以改为返回一个 `Result` 值：成功时包含 `Config` 实例，出错时描述问题。我们还会把函数名从 `new` 改为 `build`，因为许多程序员会认为 `new` 函数不应失败。当 `Config::build` 向 `main` 传递结果时，我们可以使用 `Result` 类型发出出现问题的信号。然后，修改 `main`，把 `Err` 变体转换为对用户更实用的错误消息，同时避免 `thread
+'main'` 调用带来的 `RUST_BACKTRACE` 和 `panic!` 等周边文本。
 
-Listing 12-9 shows the changes we need to make to the return value of the
-function we’re now calling `Config::build` and the body of the function needed
-to return a `Result`. Note that this won’t compile until we update `main` as
-well, which we’ll do in the next listing.
+清单 12-9 展示了现在称为 `Config::build` 的函数需要对返回值所做的修改，以及让函数返回 `Result` 所需的函数体。注意，在更新 `main` 之前这段代码不会编译；我们会在下一个清单中完成更新。
 
-<Listing number="12-9" file-name="src/main.rs" caption="Returning a `Result` from `Config::build`">
+<Listing number="12-9" file-name="src/main.rs" caption="从 `Result` 返回 `Config::build`">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-09/src/main.rs:here}}
@@ -273,33 +143,21 @@ well, which we’ll do in the next listing.
 
 </Listing>
 
-Our `build` function returns a `Result` with a `Config` instance in the success
-case and a string literal in the error case. Our error values will always be
-string literals that have the `'static` lifetime.
+我们的 `build` 函数在成功时返回包含 `Result` 实例的 `Config`，在出错时返回字符串字面量。错误值始终是具有 `'static` 生命周期的字符串字面量。
 
-We’ve made two changes in the body of the function: Instead of calling `panic!`
-when the user doesn’t pass enough arguments, we now return an `Err` value, and
-we’ve wrapped the `Config` return value in an `Ok`. These changes make the
-function conform to its new type signature.
+我们对函数体做了两处修改：用户没有传入足够参数时，不再调用 `panic!`，而是返回 `Err` 值；同时把返回的 `Config` 值包装在 `Ok` 中。这些修改使函数符合新的类型签名。
 
-Returning an `Err` value from `Config::build` allows the `main` function to
-handle the `Result` value returned from the `build` function and exit the
-process more cleanly in the error case.
+从 `Err` 返回 `Config::build` 值后，`main` 函数就能处理 `Result` 函数返回的 `build`，并在出错时更干净地退出进程。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="calling-confignew-and-handling-errors"></a>
 
-#### Calling `Config::build` and Handling Errors
+#### 调用 `Config::build` 并处理错误
 
-To handle the error case and print a user-friendly message, we need to update
-`main` to handle the `Result` being returned by `Config::build`, as shown in
-Listing 12-10. We’ll also take the responsibility of exiting the command line
-tool with a nonzero error code away from `panic!` and instead implement it by
-hand. A nonzero exit status is a convention to signal to the process that
-called our program that the program exited with an error state.
+为了处理错误情况并打印用户友好的消息，需要更新 `main` 来处理 `Result` 返回的 `Config::build`，如清单 12-10 所示。我们还会不再依靠 `panic!` 让命令行工具以非零错误代码退出，而是手动实现这一点。非零退出状态是一种约定，用来向调用我们程序的进程表明程序以错误状态退出。
 
-<Listing number="12-10" file-name="src/main.rs" caption="Exiting with an error code if building a `Config` fails">
+<Listing number="12-10" file-name="src/main.rs" caption="构建 `Config` 失败时以错误代码退出">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-10/src/main.rs:here}}
@@ -307,52 +165,27 @@ called our program that the program exited with an error state.
 
 </Listing>
 
-In this listing, we’ve used a method we haven’t covered in detail yet:
-`unwrap_or_else`, which is defined on `Result<T, E>` by the standard library.
-Using `unwrap_or_else` allows us to define some custom, non-`panic!` error
-handling. If the `Result` is an `Ok` value, this method’s behavior is similar
-to `unwrap`: It returns the inner value that `Ok` is wrapping. However, if the
-value is an `Err` value, this method calls the code in the closure, which is
-an anonymous function we define and pass as an argument to `unwrap_or_else`.
-We’ll cover closures in more detail in [Chapter 13][ch13]<!-- ignore -->. For
-now, you just need to know that `unwrap_or_else` will pass the inner value of
-the `Err`, which in this case is the static string `"not enough arguments"`
-that we added in Listing 12-9, to our closure in the argument `err` that
-appears between the vertical pipes. The code in the closure can then use the
-`err` value when it runs.
+在这个清单中，我们使用了一个尚未详细介绍的方法：标准库为 `unwrap_or_else` 定义的 `Result<T, E>`。使用 `unwrap_or_else` 可以定义自定义的、非 `panic!` 错误处理。如果 `Result` 是 `Ok` 值，这个方法的行为类似于 `unwrap`：返回 `Ok` 包装的内部值。但如果值是 `Err`，这个方法会调用闭包中的代码；闭包是我们定义并作为参数传给 `unwrap_or_else` 的匿名函数。[第 13 章][ch13]<!-- ignore -->会更详细地介绍闭包。现在只需知道，`unwrap_or_else` 会把 `Err` 的内部值传给闭包中出现在竖线之间的 `"not enough arguments"` 参数。本例中，这个内部值就是我们在清单 12-9 中添加的静态字符串 `err`。闭包运行时就可以使用 `err` 值。
 
-We’ve added a new `use` line to bring `process` from the standard library into
-scope. The code in the closure that will be run in the error case is only two
-lines: We print the `err` value and then call `process::exit`. The
-`process::exit` function will stop the program immediately and return the
-number that was passed as the exit status code. This is similar to the
-`panic!`-based handling we used in Listing 12-8, but we no longer get all the
-extra output. Let’s try it:
+我们添加了一行新的 `use`，把标准库中的 `process` 引入作用域。错误情况下运行的闭包只有两行代码：打印 `err` 值，然后调用 `process::exit`。`process::exit` 函数会立即停止程序，并返回传入的数字作为退出状态代码。这类似于清单 12-8 中基于 `panic!` 的处理方式，但不再产生所有额外输出。试试看：
 
 ```console
 {{#include ../listings/ch12-an-io-project/listing-12-10/output.txt}}
 ```
 
-Great! This output is much friendlier for our users.
+很好！这个输出对用户友好得多。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="extracting-logic-from-the-main-function"></a>
 
-### Extracting Logic from `main`
+### 从 `main` 中提取逻辑
 
-Now that we’ve finished refactoring the configuration parsing, let’s turn to
-the program’s logic. As we stated in [“Separating Concerns in Binary
-Projects”](#separation-of-concerns-for-binary-projects)<!-- ignore -->, we’ll
-extract a function named `run` that will hold all the logic currently in the
-`main` function that isn’t involved with setting up configuration or handling
-errors. When we’re done, the `main` function will be concise and easy to verify
-by inspection, and we’ll be able to write tests for all the other logic.
+现在配置解析已经重构完毕，接下来处理程序逻辑。正如[“分离二进制项目中的关注点”](#separation-of-concerns-for-binary-projects)<!-- ignore -->一节所说，我们会提取一个名为 `run` 的函数，用来保存当前 `main` 函数中与设置配置或处理错误无关的全部逻辑。完成后，`main` 函数会简洁且易于通过检查验证，我们也能为其他所有逻辑编写测试。
 
-Listing 12-11 shows the small, incremental improvement of extracting a `run`
-function.
+清单 12-11 展示了提取 `run` 函数这一小步渐进式改进。
 
-<Listing number="12-11" file-name="src/main.rs" caption="Extracting a `run` function containing the rest of the program logic">
+<Listing number="12-11" file-name="src/main.rs" caption="提取包含其余程序逻辑的 `run` 函数">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-11/src/main.rs:here}}
@@ -360,25 +193,17 @@ function.
 
 </Listing>
 
-The `run` function now contains all the remaining logic from `main`, starting
-from reading the file. The `run` function takes the `Config` instance as an
-argument.
+现在，`run` 函数包含 `main` 中从读取文件开始的所有剩余逻辑。`run` 函数接收 `Config` 实例作为参数。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="returning-errors-from-the-run-function"></a>
 
-#### Returning Errors from `run`
+#### 从 `run` 返回错误
 
-With the remaining program logic separated into the `run` function, we can
-improve the error handling, as we did with `Config::build` in Listing 12-9.
-Instead of allowing the program to panic by calling `expect`, the `run`
-function will return a `Result<T, E>` when something goes wrong. This will let
-us further consolidate the logic around handling errors into `main` in a
-user-friendly way. Listing 12-12 shows the changes we need to make to the
-signature and body of `run`.
+将剩余程序逻辑分离到 `run` 函数后，我们可以像在清单 12-9 中处理 `Config::build` 那样改进错误处理。出现问题时，`expect` 函数不再调用 `run` 让程序 panic，而是返回 `Result<T, E>`。这样就能以用户友好的方式，把更多错误处理逻辑集中到 `main` 中。清单 12-12 展示了需要对 `run` 的签名和函数体所做的修改。
 
-<Listing number="12-12" file-name="src/main.rs" caption="Changing the `run` function to return `Result`">
+<Listing number="12-12" file-name="src/main.rs" caption="修改 `run` 函数以返回 `Result`">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-12/src/main.rs:here}}
@@ -386,80 +211,45 @@ signature and body of `run`.
 
 </Listing>
 
-We’ve made three significant changes here. First, we changed the return type of
-the `run` function to `Result<(), Box<dyn Error>>`. This function previously
-returned the unit type, `()`, and we keep that as the value returned in the
-`Ok` case.
+这里做了三处重要修改。首先，我们把 `run` 函数的返回类型改为 `Result<(), Box<dyn Error>>`。这个函数之前返回单元类型 `()`，现在仍将它作为 `Ok` 情况下返回的值。
 
-For the error type, we used the trait object `Box<dyn Error>` (and we brought
-`std::error::Error` into scope with a `use` statement at the top). We’ll cover
-trait objects in [Chapter 18][ch18]<!-- ignore -->. For now, just know that
-`Box<dyn Error>` means the function will return a type that implements the
-`Error` trait, but we don’t have to specify what particular type the return
-value will be. This gives us flexibility to return error values that may be of
-different types in different error cases. The `dyn` keyword is short for
-_dynamic_.
+对于错误类型，我们使用 trait 对象 `Box<dyn Error>`（并在顶部用 `std::error::Error` 语句将 `use` 引入作用域）。[第 18 章][ch18]<!-- ignore -->会介绍 trait 对象。现在只需知道，`Box<dyn Error>` 表示函数会返回实现了 `Error` trait 的类型，但不必指定返回值的具体类型。这让我们可以灵活地在不同错误情况下返回不同类型的错误值。关键字 `dyn` 是 _dynamic_ 的缩写。
 
-Second, we’ve removed the call to `expect` in favor of the `?` operator, as we
-talked about in [Chapter 9][ch9-question-mark]<!-- ignore -->. Rather than
-`panic!` on an error, `?` will return the error value from the current function
-for the caller to handle.
+其次，正如[第 9 章][ch9-question-mark]<!-- ignore -->所讨论的，我们移除了对 `expect` 的调用，改用 `?` 运算符。发生错误时，`panic!` 不会调用 `?`，而是从当前函数返回错误值，让调用者处理。
 
-Third, the `run` function now returns an `Ok` value in the success case.
-We’ve declared the `run` function’s success type as `()` in the signature,
-which means we need to wrap the unit type value in the `Ok` value. This
-`Ok(())` syntax might look a bit strange at first. But using `()` like this is
-the idiomatic way to indicate that we’re calling `run` for its side effects
-only; it doesn’t return a value we need.
+第三，`run` 函数现在会在成功时返回 `Ok` 值。我们在签名中将 `run` 函数的成功类型声明为 `()`，因此需要把单元类型值包装到 `Ok` 中。`Ok(())` 这样的语法初看可能有些奇怪，但这样使用 `()` 是惯用的写法，用来表示调用 `run` 只是为了它的副作用；它不会返回我们需要的值。
 
-When you run this code, it will compile but will display a warning:
+运行这段代码时，它会编译成功，但会显示一条警告：
 
 ```console
 {{#include ../listings/ch12-an-io-project/listing-12-12/output.txt}}
 ```
 
-Rust tells us that our code ignored the `Result` value and the `Result` value
-might indicate that an error occurred. But we’re not checking to see whether or
-not there was an error, and the compiler reminds us that we probably meant to
-have some error-handling code here! Let’s rectify that problem now.
+Rust 告诉我们，代码忽略了 `Result` 值，而 `Result` 值可能表示发生了错误。但我们没有检查是否发生错误，编译器提醒我们这里可能应该有一些错误处理代码！现在就来解决这个问题。
 
-#### Handling Errors Returned from `run` in `main`
+#### 在 `run` 中处理 `main` 返回的错误
 
-We’ll check for errors and handle them using a technique similar to one we used
-with `Config::build` in Listing 12-10, but with a slight difference:
+我们会使用与清单 12-10 中处理 `Config::build` 类似的技术检查并处理错误，但有一点不同：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/no-listing-01-handling-errors-in-main/src/main.rs:here}}
 ```
 
-We use `if let` rather than `unwrap_or_else` to check whether `run` returns an
-`Err` value and to call `process::exit(1)` if it does. The `run` function
-doesn’t return a value that we want to `unwrap` in the same way that
-`Config::build` returns the `Config` instance. Because `run` returns `()` in
-the success case, we only care about detecting an error, so we don’t need
-`unwrap_or_else` to return the unwrapped value, which would only be `()`.
+我们使用 `if let` 而不是 `unwrap_or_else` 来检查 `run` 是否返回 `Err` 值，并在返回 Err 时调用 `process::exit(1)`。`run` 函数不会返回一个我们想要 `unwrap` 的值，就像 `Config::build` 返回的那样；该函数会返回 `Config` 实例。因为 `run` 在成功时返回 `()`，我们只关心检测错误，所以不需要让 `unwrap_or_else` 返回解包后的值，因为那个值只会是 `()`。
 
-The bodies of the `if let` and the `unwrap_or_else` functions are the same in
-both cases: We print the error and exit.
+在这两种情况下，`if let` 和 `unwrap_or_else` 的函数体相同：打印错误并退出。
 
-### Splitting Code into a Library Crate
+### 将代码拆分到库 crate 中
 
-Our `minigrep` project is looking good so far! Now we’ll split the
-_src/main.rs_ file and put some code into the _src/lib.rs_ file. That way, we
-can test the code and have a _src/main.rs_ file with fewer responsibilities.
+目前我们的 `minigrep` 项目进展不错！现在把 _src/main.rs_ 文件拆分开，将一部分代码放入 _src/lib.rs_ 文件。这样既能测试代码，也能让 _src/main.rs_ 的职责更少。
 
-Let’s define the code responsible for searching text in _src/lib.rs_ rather
-than in _src/main.rs_, which will let us (or anyone else using our
-`minigrep` library) call the searching function from more contexts than our
-`minigrep` binary.
+我们把负责搜索文本的代码定义在 _src/lib.rs_ 而不是 _src/main.rs_ 中。这样，我们（或其他使用 `minigrep` 库的人）就能在比 `minigrep` 二进制程序更多的上下文中调用搜索函数。
 
-First, let’s define the `search` function signature in _src/lib.rs_ as shown in
-Listing 12-13, with a body that calls the `unimplemented!` macro. We’ll explain
-the signature in more detail when we fill in the implementation.
+首先，按照清单 12-13 所示，在 _src/lib.rs_ 中定义 `search` 函数签名，并让函数体调用 `unimplemented!` 宏。填入实现时，我们会更详细地解释这个签名。
 
-<Listing number="12-13" file-name="src/lib.rs" caption="Defining the `search` function in *src/lib.rs*">
+<Listing number="12-13" file-name="src/lib.rs" caption="在 *src/lib.rs* 中定义 `search` 函数">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-13/src/lib.rs}}
@@ -467,14 +257,11 @@ the signature in more detail when we fill in the implementation.
 
 </Listing>
 
-We’ve used the `pub` keyword on the function definition to designate `search`
-as part of our library crate’s public API. We now have a library crate that we
-can use from our binary crate and that we can test!
+我们在函数定义中使用 `pub` 关键字，将 `search` 标记为库 crate 公共 API 的一部分。现在，我们有了一个既能从二进制 crate 使用、又能进行测试的库 crate！
 
-Now we need to bring the code defined in _src/lib.rs_ into the scope of the
-binary crate in _src/main.rs_ and call it, as shown in Listing 12-14.
+现在需要把 _src/lib.rs_ 中定义的代码引入 _src/main.rs_ 的二进制 crate 作用域并调用它，如清单 12-14 所示。
 
-<Listing number="12-14" file-name="src/main.rs" caption="Using the `minigrep` library crate’s `search` function in *src/main.rs*">
+<Listing number="12-14" file-name="src/main.rs" caption="在 *src/main.rs* 中使用 `minigrep` 库 crate 的 `search` 函数">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-14/src/main.rs:here}}
@@ -482,28 +269,13 @@ binary crate in _src/main.rs_ and call it, as shown in Listing 12-14.
 
 </Listing>
 
-We add a `use minigrep::search` line to bring the `search` function from
-the library crate into the binary crate’s scope. Then, in the `run` function,
-rather than printing out the contents of the file, we call the `search`
-function and pass the `config.query` value and `contents` as arguments. Then,
-`run` will use a `for` loop to print each line returned from `search` that
-matched the query. This is also a good time to remove the `println!` calls in
-the `main` function that displayed the query and the file path so that our
-program only prints the search results (if no errors occur).
+我们添加 `use minigrep::search` 这一行，把库 crate 中的 `search` 函数引入二进制 crate 的作用域。然后在 `run` 函数中，不再打印文件内容，而是调用 `search` 函数，并将 `config.query` 值和 `contents` 作为参数传入。接着，`run` 使用 `for` 循环打印 `search` 返回且匹配查询的每一行。现在也适合移除 `println!` 函数中用于显示查询字符串和文件路径的 `main` 调用，让程序只打印搜索结果（如果没有发生错误）。
 
-Note that the search function will be collecting all the results into a vector
-it returns before any printing happens. This implementation could be slow to
-display results when searching large files, because results aren’t printed as
-they’re found; we’ll discuss a possible way to fix this using iterators in
-Chapter 13.
+注意，搜索函数会先把所有结果收集到要返回的向量中，然后才开始打印。这种实现搜索大文件时可能会较慢地显示结果，因为找到结果时不会立即打印；我们会在第 13 章讨论使用迭代器解决这个问题的一种可能方式。
 
-Whew! That was a lot of work, but we’ve set ourselves up for success in the
-future. Now it’s much easier to handle errors, and we’ve made the code more
-modular. Almost all of our work will be done in _src/lib.rs_ from here on out.
+呼！工作量确实不小，但我们已经为未来的成功做好了准备。现在处理错误容易多了，代码也更加模块化。从这里开始，几乎所有工作都会在 _src/lib.rs_ 中完成。
 
-Let’s take advantage of this newfound modularity by doing something that would
-have been difficult with the old code but is easy with the new code: We’ll
-write some tests!
+让我们利用新获得的模块化特性，做一件旧代码很难做到、而新代码很容易做到的事：编写一些测试！
 
 [ch13]: ch13-00-functional-features.html
 [ch9-custom-types]: ch09-03-to-panic-or-not-to-panic.html#creating-custom-types-for-validation

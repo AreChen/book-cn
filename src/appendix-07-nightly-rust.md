@@ -1,50 +1,30 @@
-## Appendix G - How Rust is Made and “Nightly Rust”
+## 附录 G - Rust 的构造方式与 “每日” 发布
 
-This appendix is about how Rust is made and how that affects you as a Rust
-developer.
+这个附录介绍 Rust 的构造方式，以及这种方式会对咱们作为 Rust 开发者有何影响。
 
-### Stability Without Stagnation
+### 稳定而不停滞
 
-As a language, Rust cares a _lot_ about the stability of your code. We want
-Rust to be a rock-solid foundation you can build on, and if things were
-constantly changing, that would be impossible. At the same time, if we can’t
-experiment with new features, we may not find out important flaws until after
-their release, when we can no longer change things.
+作为一门编程语言，Rust *非常* 注重代码的稳定性。我们希望 Rust 成为咱们可以在其上构建软件的稳固基础，若物件不断变化，那是不可能的。与此同时，若我们无法实验一些新特性，我们可能直到他们发布后才能发现重要的缺陷，那么我们已无法再改变了。
 
-Our solution to this problem is what we call “stability without stagnation”,
-and our guiding principle is this: you should never have to fear upgrading to a
-new version of stable Rust. Each upgrade should be painless, but should also
-bring you new features, fewer bugs, and faster compile times.
+我们（Rust 团队）对这个问题的解决方案就是，我们称为 “稳定而不停滞，stability without stagnation”，我们的指导原则是：咱们绝不应该担心升级到新版本的稳定 Rust。每次升级都应是无痛的，而应带给咱们新特性、更少的 bug 以及更快的编译时间。
 
-### Choo, Choo! Release Channels and Riding the Trains
+### 啾，啾！发布通道与搭上快车
 
-Rust development operates on a _train schedule_. That is, all development is
-done in the main branch of the Rust repository. Releases follow a software
-release train model, which has been used by Cisco IOS and other software
-projects. There are three _release channels_ for Rust:
+Rust 的开发按照 *火车时刻表，train schedule* 进行。也就是说，所有开发都是在 Rust 代码仓库的主分支上完成的。发布遵循软件 “发布列车” 模型，a software release train model，该发布模型已被 Cisco IOS 及其他软件项目使用。Rust 共有三个 *发布通道，release channels*：
 
-- Nightly
-- Beta
-- Stable
+- 每日发布，nightly
+- Beta 发布，beta
+- 稳定发布，stable
 
-Most Rust developers primarily use the stable channel, but those who want to
-try out experimental new features may use nightly or beta.
+大多数 Rust 开发者主要使用稳定通道，而那些希望尝试实验性新特性的人可能会使用每日发布或 beta 发布。
 
-Here’s an example of how the development and release process works: let’s
-assume that the Rust team is working on the release of Rust 1.5. That release
-happened in December of 2015, but it will provide us with realistic version
-numbers. A new feature is added to Rust: a new commit lands on the main
-branch. Each night, a new nightly version of Rust is produced. Every day is a
-release day, and these releases are created by our release infrastructure
-automatically. So as time passes, our releases look like this, once a night:
+以下是个开发和发布流程工作方式的示例：假设 Rust 团队正在准备 Rust 1.5 的发布。这一发布发生于 2015 年 11 月，而他将向我们提供实际的版本编号。一项新的特性会添加到 Rust：一次新提会在主分支上落实。每天晚上，一个新的 Rust 每日版本都会得以产生。每天都是发布日，而这些发布都是由我们的发布基础设施自动创建。因此随着时间的推移，我们的发布看起来像下面这样，每晚一次：
 
 ```text
 nightly: * - - * - - *
 ```
 
-Every six weeks, it’s time to prepare a new release! The `beta` branch of the
-Rust repository branches off from the main branch used by nightly. Now,
-there are two releases:
+每六周，就到了准备新发布的时候了！Rust 代码仓库的 `beta` 分支，会从由每日发布使用的主分支中分叉出来。现在，共有两个发布：
 
 ```text
 nightly: * - - * - - *
@@ -52,9 +32,7 @@ nightly: * - - * - - *
 beta:                *
 ```
 
-Most Rust users do not use beta releases actively, but test against beta in
-their CI system to help Rust discover possible regressions. In the meantime,
-there’s still a nightly release every night:
+大多数 Rust 用户不会主动使用 beta 发布，但会在持续集成 CI 系统中测试 beta 发布，以帮助 Rust 发现可能出现的回归问题。与此同时，仍有每晚的每日发布：
 
 ```text
 nightly: * - - * - - * - - * - - *
@@ -62,10 +40,7 @@ nightly: * - - * - - * - - * - - *
 beta:                *
 ```
 
-Let’s say a regression is found. Good thing we had some time to test the beta
-release before the regression snuck into a stable release! The fix is applied
-to the main branch, so that nightly is fixed, and then the fix is backported to
-the `beta` branch, and a new release of beta is produced:
+假设某个回归问题被找到。在回归问题进入稳定发布之前，幸好我们还有时间测试 beta 发布！修复会应用到主分支，因此每日发布得以修复，然后修复得以反向移植到 `beta` 分支，进而一个新的 beta 发布得以产生：
 
 ```text
 nightly: * - - * - - * - - * - - * - - *
@@ -73,8 +48,7 @@ nightly: * - - * - - * - - * - - * - - *
 beta:                * - - - - - - - - *
 ```
 
-Six weeks after the first beta was created, it’s time for a stable release! The
-`stable` branch is produced from the `beta` branch:
+首个 beta 发布六周后，是时候推出稳定发布了！`stable` 分支产生自 `beta` 分支：
 
 ```text
 nightly: * - - * - - * - - * - - * - - * - * - *
@@ -84,10 +58,7 @@ beta:                * - - - - - - - - *
 stable:                                *
 ```
 
-Hooray! Rust 1.5 is done! However, we’ve forgotten one thing: because the six
-weeks have gone by, we also need a new beta of the _next_ version of Rust, 1.6.
-So after `stable` branches off of `beta`, the next version of `beta` branches
-off of `nightly` again:
+太棒了！Rust 1.5 完成了！不过，我们忘记了一件事：由于这六周已经过去，我们还需要 Rust *下一* 版本 1.6 的新 beta 发布。因此在 `stable` 分支从 `beta` 分支分叉出后，下一版本的 `beta` 分支，又会从 `nightly` 分叉出来：
 
 ```text
 nightly: * - - * - - * - - * - - * - - * - * - *
@@ -97,63 +68,33 @@ beta:                * - - - - - - - - *       *
 stable:                                *
 ```
 
-This is called the “train model” because every six weeks, a release “leaves the
-station”, but still has to take a journey through the beta channel before it
-arrives as a stable release.
+这被称为 “列车模型”，因为每六周，就会有一个发布 “出站”，但在作为稳定发布之前，仍然必须经历 beta 通道。
 
-Rust releases every six weeks, like clockwork. If you know the date of one Rust
-release, you can know the date of the next one: it’s six weeks later. A nice
-aspect of having releases scheduled every six weeks is that the next train is
-coming soon. If a feature happens to miss a particular release, there’s no need
-to worry: another one is happening in a short time! This helps reduce pressure
-to sneak possibly unpolished features in close to the release deadline.
+Rust 每六周发布一次，就像时刻表一样。当咱们知道某次 Rust 发布的日期，就可以知道下一发布的日期：那就是六周后。每六周安排一次发布的一个好处是，下一班列车很快就会到来。若某项特性碰巧错过了某个特定发布，也无需担心：另一个发布很快就会出现！这有助于减少在发布截止日期邻近时，塞入可能尚未打磨完善的特性所带来的压力。
 
-Thanks to this process, you can always check out the next build of Rust and
-verify for yourself that it’s easy to upgrade to: if a beta release doesn’t
-work as expected, you can report it to the team and get it fixed before the
-next stable release happens! Breakage in a beta release is relatively rare, but
-`rustc` is still a piece of software, and bugs do exist.
+得益于这一流程，咱们可以随时检出 Rust 的下一个构建，并请自验证是否可以轻松升级到该构建：当 beta 发布未如预期运行时，咱们可以向 Rust 团队报告而在下一个稳定发布之前修复他！beta 发布中的损坏相对较少，但 `rustc` 终究是个软件，因此确实存在一些 bug。
 
-### Maintenance time
+### 维护周期
 
-The Rust project supports the most recent stable version. When a new stable
-version is released, the old version reaches its end of life (EOL). This means
-each version is supported for six weeks.
+Rust 项目支持最新的稳定版本。当新稳定版本发布后，旧版本即达到生命周期终止（end of life，EOL）。这意味着每个版本的维护周期为六周。
 
-### Unstable Features
+### 不稳定特性
 
-There’s one more catch with this release model: unstable features. Rust uses a
-technique called “feature flags” to determine what features are enabled in a
-given release. If a new feature is under active development, it lands on the
-main branch, and therefore, in nightly, but behind a _feature flag_. If you, as
-a user, wish to try out the work-in-progress feature, you can, but you must be
-using a nightly release of Rust and annotate your source code with the
-appropriate flag to opt in.
+这种发布模型还有一点需要注意：不稳定特性。Rust 使用了一种名为 “特性标志” 的技术，来决定特定发布中启用哪些特性。当某项新特性正处于积极开发中时，他会落地在主分支上，而因此会落地在每日发布中，但位于 *特性标志* 之后。而咱们作为用户，若希望尝试这项正在开发中的特性，the work-in-progress feature，是可以的，但必须使用 Rust 的每日发布，并通过适当的标志注解源代码以选择加入该特性。
 
-If you’re using a beta or stable release of Rust, you can’t use any feature
-flags. This is the key that allows us to get practical use with new features
-before we declare them stable forever. Those who wish to opt into the bleeding
-edge can do so, and those who want a rock-solid experience can stick with
-stable and know that their code won’t break. Stability without stagnation.
+当咱们使用的是 Rust 的 beta 或稳定发布，则无法使用任何特性标志。这是允许我们（Rust 团队）在宣布新特性永久稳定之前，允许我们获得对新特性的实际使用的关键。希望选择前沿技术的人可以这样做，而希望稳定可靠体验的人则可以坚持使用稳定发布，并知道他们的代码不会破坏。这正是 “稳而不停滞” 的体现。
 
-This book only contains information about stable features, as in-progress
-features are still changing, and surely they’ll be different between when this
-book was written and when they get enabled in stable builds. You can find
-documentation for nightly-only features online.
+这本书仅包含有关稳定特性的信息，因为正在开发中的特性仍在变化中，并且在编写本书时，与这些特性在稳定发布中启用之际，他们肯定将有所不同。咱们可以在线上找到仅每日发布的信息。
 
-### Rustup and the Role of Rust Nightly
+### Rustup 和 Rust 每日发布的作用
 
-Rustup makes it easy to change between different release channels of Rust, on a
-global or per-project basis. By default, you’ll have stable Rust installed. To
-install nightly, for example:
+rustup 使咱们可以在全局或每个项目的基础上，在 Rust 的不同发布通道之间变换。默认情况下，咱们将安装稳定的 Rust。而比如要安装每日发布：
 
 ```console
 $ rustup toolchain install nightly
 ```
 
-You can see all of the _toolchains_ (releases of Rust and associated
-components) you have installed with `rustup` as well. Here’s an example on one
-of your authors’ Windows computer:
+咱们也可以通过`rustup` 查看已安装的所有 *工具链* （Rust 和相关组件的发布）。下面是咱们的一位作者的 Windows 计算机上的示例：
 
 ```powershell
 > rustup toolchain list
@@ -162,45 +103,21 @@ beta-x86_64-pc-windows-msvc
 nightly-x86_64-pc-windows-msvc
 ```
 
-As you can see, the stable toolchain is the default. Most Rust users use stable
-most of the time. You might want to use stable most of the time, but use
-nightly on a specific project, because you care about a cutting-edge feature.
-To do so, you can use `rustup override` in that project’s directory to set the
-nightly toolchain as the one `rustup` should use when you’re in that directory:
+如咱们所见，稳定工具链是默认的。大多数 Rust 用户大部分时间都使用稳定发布。咱们可能大部分时间都希望使用稳定发布，但会对某个特定项目使用每日发布，因为关注某项前沿特性。为此，咱们可以在该项目的目录下使用 `rustup override`，来设置每日发布工具链为当在该目录下时，`rustup` 应使用的工具链：
 
 ```console
 $ cd ~/projects/needs-nightly
 $ rustup override set nightly
 ```
 
-Now, every time you call `rustc` or `cargo` inside of
-_~/projects/needs-nightly_, `rustup` will make sure that you are using nightly
-Rust, rather than your default of stable Rust. This comes in handy when you
-have a lot of Rust projects!
+现在，每当咱们在 `rustc` 目录下调用 `cargo` 或 `rustup` 时，rustup 都将确保咱们使用的是 Rust 每日发布，而不是默认的稳定发布。当咱们有很多 Rust 项目时，这排上用场!
 
-### The RFC Process and Teams
+### RFC 流程与团队
 
-So how do you learn about these new features? Rust’s development model follows
-a _Request For Comments (RFC) process_. If you’d like an improvement in Rust,
-you can write up a proposal, called an RFC.
+那么，如何了解到这些新特性呢？Rust 的开发模型，遵循了 *征求意见流程，Request For Comments(RFC) process*。当咱们希望某项 Rust 改进时，可以撰写一份提案，即 RFC。
 
-Anyone can write RFCs to improve Rust, and the proposals are reviewed and
-discussed by the Rust team, which is comprised of many topic subteams. There’s
-a full list of the teams [on Rust’s website](https://www.rust-lang.org/governance), which includes teams for
-each area of the project: language design, compiler implementation,
-infrastructure, documentation, and more. The appropriate team reads the
-proposal and the comments, writes some comments of their own, and eventually,
-there’s consensus to accept or reject the feature.
+任何人都可以撰写 RFC 来改进 Rust，这些提案将由 Rust 团队审查和讨论，该团队由多个专题子团队组成。[on Rust’s website](https://www.rust-lang.org/governance) 上列出了完整的团队列表，其中包括项目各个领域的团队：语言设计、编译器实现、基础设施、文档等等。相关的团队会阅读提案和评论，写下自己的一些评论，最终就该特性的采纳或否决达成共识。
 
-If the feature is accepted, an issue is opened on the Rust repository, and
-someone can implement it. The person who implements it very well may not be the
-person who proposed the feature in the first place! When the implementation is
-ready, it lands on the main branch behind a feature gate, as we discussed in
-the [“Unstable Features”](#unstable-features)<!-- ignore --> section.
+当该特性被接受时，就会在 Rust 代码仓库上打开一个 issue，然后其他人可以实现他。实现得非常非常的人，未必就是最初提出这个特性的人！当实现准备就绪后，他会通过就会特性闸门，a feature gate，合并到主分支，正如我们在 [“Unstable Features”](#unstable-features) 小节中讨论的那样。 <!-- ignore -->
 
-After some time, once Rust developers who use nightly releases have been able
-to try out the new feature, team members will discuss the feature, how it’s
-worked out on nightly, and decide if it should make it into stable Rust or not.
-If the decision is to move forward, the feature gate is removed, and the
-feature is now considered stable! It rides the trains into a new stable release
-of Rust.
+一段时间后，一旦使用每日发布的 Rust 开发者能够试用这项新特性，Rust 团队成员对这项特性及其在每日发布上的表现加以讨论，并决定是否应该将其纳入稳定发布 Rust。当决定推进时，该特性的门槛将被移除，该特性就被认为是稳定的！他就会搭上列车，进入进 Rust 的新的稳定发布。

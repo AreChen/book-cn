@@ -2,7 +2,9 @@
 
 这是基于 [Rust 官方 Book 仓库](https://github.com/rust-lang/book) 的非官方中文翻译工作仓库。我们以官方 `main` 分支为内容上游，并参考社区已有译文来提高翻译效率和术语一致性。
 
-本仓库当前处于增量翻译阶段：未完成翻译的章节仍保留官方英文原文，已翻译章节会在 [`TRANSLATION_STATUS.md`](TRANSLATION_STATUS.md) 中标记。这样每一次提交都能构建、审阅并跟随上游，而不会隐藏尚未翻译的内容。
+当前 `src/` 中的 112 个 Markdown 文件都已经完成第一轮中文翻译；接下来仍需要社区逐章审校、润色和跟随官方上游更新。翻译过程中的代码块、链接、锚点和 mdBook 标记会由自动检查器持续保护，具体进度见 [`TRANSLATION_STATUS.md`](TRANSLATION_STATUS.md)。
+
+当前基线包含 956 个代码围栏和 424 个 `Listing` 标记。翻译检查器会将它们与官方 `upstream/main` 逐项比较，避免中文化过程中破坏示例代码或书籍构建结构。
 
 ## 在线阅读和本地构建
 
@@ -45,7 +47,7 @@ mdbook build
 git diff --check
 ```
 
-如果修改了代码清单或预处理器相关内容，再运行 `mdbook test`。
+如果修改了代码清单或预处理器相关内容，再运行 `mdbook test`。Windows 上部分异步示例可能受本机 `link.exe` 查找 `windows.*.lib` 的方式影响；仓库 CI 在 Ubuntu 上执行完整的 mdBook 测试。
 
 ## 上游与许可证
 

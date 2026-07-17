@@ -1,28 +1,14 @@
-## Building a Single-Threaded Web Server
+## 构建单线程的 Web 服务器
 
-We’ll start by getting a single-threaded web server working. Before we begin,
-let’s look at a quick overview of the protocols involved in building web
-servers. The details of these protocols are beyond the scope of this book, but
-a brief overview will give you the information you need.
+我们将从让单线程的 web 服务器运行开始。在开始之前，我们来先快速概述一下构建 web 服务器所涉及的协议。这些协议的细节超出了本书的范围，但简要概述就将给予咱们所需的信息。
 
-The two main protocols involved in web servers are _Hypertext Transfer
-Protocol_ _(HTTP)_ and _Transmission Control Protocol_ _(TCP)_. Both protocols
-are _request-response_ protocols, meaning a _client_ initiates requests and a
-_server_ listens to the requests and provides a response to the client. The
-contents of those requests and responses are defined by the protocols.
+Web 服务器涉及的两个主要协议，分别是 *超文本传输协议 HTTP* 和 *传输控制协议 TCP*。这两个协议都属于 *请求-响应* 协议，这意味着 *客户端* 发起请求，*服务器* 监听请求并向客户端提供响应。这些请求和响应的内容由协议定义。
 
-TCP is the lower-level protocol that describes the details of how information
-gets from one server to another but doesn’t specify what that information is.
-HTTP builds on top of TCP by defining the contents of the requests and
-responses. It’s technically possible to use HTTP with other protocols, but in
-the vast majority of cases, HTTP sends its data over TCP. We’ll work with the
-raw bytes of TCP and HTTP requests and responses.
+TCP 属于底层协议，描述了信息如何从一台服务器传输到另一服务器的具体细节，但并未规定这些信息的内容。HTTP 通过定义请求和响应的内容，而构建于 TCP 之上。从技术上讲，于其他协议一起使用 HTTP 是可行的，但在绝大多数情况下，HTTP 都时通过 TCP 发送数据。我们将使用 TCP 和 HTTP 请求和响应的原始字节。
 
-### Listening to the TCP Connection
+### 监听 TCP 连接
 
-Our web server needs to listen to a TCP connection, so that’s the first part
-we’ll work on. The standard library offers a `std::net` module that lets us do
-this. Let’s make a new project in the usual fashion:
+我们的 web 服务器需要监听 TCP 连接，因此这是我们将要处理的第一部分。标准库提供了 `std::net` 模组，让我们可以做到这一点。我们来以惯常方式构造一个新项目：
 
 ```console
 $ cargo new hello
@@ -30,9 +16,7 @@ $ cargo new hello
 $ cd hello
 ```
 
-Now enter the code in Listing 21-1 in _src/main.rs_ to start. This code will
-listen at the local address `127.0.0.1:7878` for incoming TCP streams. When it
-gets an incoming stream, it will print `Connection established!`.
+现在，请在 `127.0.0.1:7878` 中输入下面清单 21-1 中的代码来开始。这段代码将在本地地址 `Connection established!` 上监听传入的 TCP 流。当他获取到传入流时，他将打印 连接已建立！。
 
 <Listing number="21-1" file-name="src/main.rs" caption="Listening for incoming streams and printing a message when we receive a stream">
 
@@ -42,53 +26,18 @@ gets an incoming stream, it will print `Connection established!`.
 
 </Listing>
 
-Using `TcpListener`, we can listen for TCP connections at the address
-`127.0.0.1:7878`. In the address, the section before the colon is an IP address
-representing your computer (this is the same on every computer and doesn’t
-represent the authors’ computer specifically), and `7878` is the port. We’ve
-chosen this port for two reasons: HTTP isn’t normally accepted on this port, so
-our server is unlikely to conflict with any other web server you might have
-running on your machine, and 7878 is _rust_ typed on a telephone.
+使用 `TcpListener`，我们可以监听地址 `127.0.0.1:7878` 上的 TCP 连接。在地址中，冒号之前的部分是个 IP 地之，代表咱们的计算机（这在每台计算机上都是相同的，并不特指本书作者的计算机），而 `7878` 是端口。我们选择这个端口有两个原因：HTTP 在这个端口上通常是不接受的，因此我们的服务器不太可能于咱们机器上运行的任何其他 web 服务器冲突，并且 7878 在电话上输入时听起来像 *rust*。
 
-The `bind` function in this scenario works like the `new` function in that it
-will return a new `TcpListener` instance. The function is called `bind`
-because, in networking, connecting to a port to listen to is known as “binding
-to a port.”
+在这一情形下的 `bind` 函数的作用与 `new` 函数相似，将返回一个新的 `TcpListener` 实例。该函数称为 `bind`，因为在网络通信中，连接到某个要监听的端口称为 “绑定到端口”。
 
-The `bind` function returns a `Result<T, E>`, which indicates that it’s
-possible for binding to fail, for example, if we ran two instances of our
-program and so had two programs listening to the same port. Because we’re
-writing a basic server just for learning purposes, we won’t worry about
-handling these kinds of errors; instead, we use `unwrap` to stop the program if
-errors happen.
+`bind` 函数返回 `Result<T, E>`，这表明绑定可能失败。例如，当我们运行了程序的两个实例，而因此让两个程序监听同一个端口时；由于我们只是出于学习目的而编写一个基础服务器，因此无需担心处理此类错误；相反，我们使用 `unwrap` 来在错误发生时停止程序。
 
-The `incoming` method on `TcpListener` returns an iterator that gives us a
-sequence of streams (more specifically, streams of type `TcpStream`). A single
-_stream_ represents an open connection between the client and the server.
-_Connection_ is the name for the full request and response process in which a
-client connects to the server, the server generates a response, and the server
-closes the connection. As such, we will read from the `TcpStream` to see what
-the client sent and then write our response to the stream to send data back to
-the client. Overall, this `for` loop will process each connection in turn and
-produce a series of streams for us to handle.
+`incoming` 上的 `TcpListener` 方法返回一个迭代器，给予我们一个流的序列（更具体地说，是 `TcpStream` 类型的流）。单个 *流* 代表客户端与服务器之间的开放连接。所谓 *连接，conneciton*，是指完整的请求和响应过程，其中客户端连接到服务器，服务器生成响应，然后服务器关闭连接。因此，我们将从 `TcpStream` 中读取以查看客户端发送的内容，然后将响应写入流以将数据发送回客户端。总的来说，这个 `for` 循环将依次处理每个连接，并生成一系列供我们处理的流。
 
-For now, our handling of the stream consists of calling `unwrap` to terminate
-our program if the stream has any errors; if there aren’t any errors, the
-program prints a message. We’ll add more functionality for the success case in
-the next listing. The reason we might receive errors from the `incoming` method
-when a client connects to the server is that we’re not actually iterating over
-connections. Instead, we’re iterating over _connection attempts_. The
-connection might not be successful for a number of reasons, many of them
-operating system specific. For example, many operating systems have a limit to
-the number of simultaneous open connections they can support; new connection
-attempts beyond that number will produce an error until some of the open
-connections are closed.
+目前，我们对流的处理包括 `unwrap` `incoming`
 
-Let’s try running this code! Invoke `cargo run` in the terminal and then load
-_127.0.0.1:7878_ in a web browser. The browser should show an error message
-like “Connection reset” because the server isn’t currently sending back any
-data. But when you look at your terminal, you should see several messages that
-were printed when the browser connected to the server!
+- 当流出现任何错误时，调用 `cargo run` 来终止程序；
+- 当没有任何错误时，程序则打印一条消息。
 
 ```text
      Running `target/debug/hello`
@@ -97,40 +46,19 @@ Connection established!
 Connection established!
 ```
 
-Sometimes you’ll see multiple messages printed for one browser request; the
-reason might be that the browser is making a request for the page as well as a
-request for other resources, like the _favicon.ico_ icon that appears in the
-browser tab.
+我们将在下一代码清单中为流成功的情形添加更多功能。当客户端连接到服务器时，我们可能会从 incoming 方法收到错误的原因在于，我们实际上并不是在遍历连接。而是在遍历 *连接尝试*。连接可能因多种原因而失败，其中许多原因都是特定于操作系统的。例如，许多操作系统对可支持的同时打开连接的数量有限制；超过该数量的新连接尝试将引发错误，知道部分已打开的连接被关闭为止。
 
-It could also be that the browser is trying to connect to the server multiple
-times because the server isn’t responding with any data. When `stream` goes out
-of scope and is dropped at the end of the loop, the connection is closed as
-part of the `drop` implementation. Browsers sometimes deal with closed
-connections by retrying, because the problem might be temporary.
+我们来尝试运行这段代码！在终端中执行 `stream`，然后在 web 浏览器中加载 `drop`。由于服务器当前尚未返回任何数据，浏览器应该显示 Connection reset, 的错误消息。但当咱们查看终端时，应该看到浏览器连接到服务器时打印的几条消息！
 
-Browsers also sometimes open multiple connections to the server without sending
-any requests so that if they *do* later send requests, those requests can
-happen more quickly. When this occurs, our server will see each connection,
-regardless of whether there are any requests over that connection. Many
-versions of Chrome-based browsers do this, for example; you can disable that
-optimization by using private browsing mode or using a different browser.
+有时咱们会看到针对一次浏览器请求打印多条消息；原因可能是浏览器在请求页面时，同时也请求了其他资源，例如显示在浏览器标签页中的 favicon.ico 图标。
 
-The important factor is that we’ve successfully gotten a handle to a TCP
-connection!
+也可能是因为服务器没有响应任何数据，导致浏览器尝试多次连接到服务器。当 stream 超出作用域并在循环结束时被启用时，连接将作为 drop 实现的一部分而被关闭。浏览器有时会通过重试来处理关闭的连接，因为问题可能是暂时的。
 
-Remember to stop the program by pressing <kbd>ctrl</kbd>-<kbd>C</kbd> when
-you’re done running a particular version of the code. Then, restart the program
-by invoking the `cargo run` command after you’ve made each set of code changes
-to make sure you’re running the newest code.
+浏览器有时也会在不发送任何请求的情况下，打开与服务器的多个连接，以便稍后 *真正* 发送请求时，这些请求可以更快地发生。当这种情况发生时，我们的服务器将发现到每个连接，无论连接上是否有请求。例如，许多基于 Chrome 的浏览器版本都会这样做；咱们可以通过使用隐私浏览模式，或使用其他浏览器来禁用这一优化。 `cargo run`
 
-### Reading the Request
+### 读取请求
 
-Let’s implement the functionality to read the request from the browser! To
-separate the concerns of first getting a connection and then taking some action
-with the connection, we’ll start a new function for processing connections. In
-this new `handle_connection` function, we’ll read data from the TCP stream and
-print it so that we can see the data being sent from the browser. Change the
-code to look like Listing 21-2.
+我们来实现读取来自浏览器的请求的功能！为了将首先获取连接，然后对连接采取一些操作的关注点分离，我们将开启一个新函数来处理连接。在这个新的 `handle_connection` 函数中，我们将读取 TCP 流中的数据并将其打印出来，以便我们可以查看浏览器发送的数据。请修改代码为下面清单 21-2 这样。
 
 <Listing number="21-2" file-name="src/main.rs" caption="Reading from the `TcpStream` and printing the data">
 
@@ -140,38 +68,18 @@ code to look like Listing 21-2.
 
 </Listing>
 
-We bring `std::io::BufReader` and `std::io::prelude` into scope to get access
-to traits and types that let us read from and write to the stream. In the `for`
-loop in the `main` function, instead of printing a message that says we made a
-connection, we now call the new `handle_connection` function and pass the
-`stream` to it.
+我们带入 `std::io::BufReader` 和 `std::io::prelude` 到作用域，以访问允许我们从流中读取和向流中写入的特质与类型。在 `for` 函数的 `main` 循环中，我们不再打印表示我们已建立连接的消息，而是调用新的 `handle_connection` 函数，并传递 `stream` 给他。
 
-In the `handle_connection` function, we create a new `BufReader` instance that
-wraps a reference to the `stream`. The `BufReader` adds buffering by managing
-calls to the `std::io::Read` trait methods for us.
+在 `handle_connection` 函数中，我们创建了一个新的 `BufReader` 实例，封装了到 `stream` 的引用。`BufReader` 通过管理到 `std::io::Read` 特质方法的调用，为我们带来缓冲功能。
 
-We create a variable named `http_request` to collect the lines of the request
-the browser sends to our server. We indicate that we want to collect these
-lines in a vector by adding the `Vec<_>` type annotation.
+我们创建了一个名为 `http_request` 的变量，以收集浏览器发送到我们服务器的请求行。通过添加 `Vec<_>` 的类型注解，我们表明希望收集这些行到一个矢量值中。
 
-`BufReader` implements the `std::io::BufRead` trait, which provides the `lines`
-method. The `lines` method returns an iterator of `Result<String,
-std::io::Error>` by splitting the stream of data whenever it sees a newline
-byte. To get each `String`, we `map` and `unwrap` each `Result`. The `Result`
-might be an error if the data isn’t valid UTF-8 or if there was a problem
-reading from the stream. Again, a production program should handle these errors
-more gracefully, but we’re choosing to stop the program in the error case for
-simplicity.
+`BufReader` 实现了 `std::io::BufRead` 特质，该特质提供了 `lines` 方法。`lines` 方法通过在遇到换行字节时分割数据流，返回一个 `Result<String,
+std::io::Error>` 迭代器。为了获取每个 `String`，我们使用 `map` 和 `unwrap` 处理每个 `Result`。当数据不是有效的 UTF-8 编码，或者从流读取存在问题时，`Result` 可能就是错误。同样，生产程序应该更优雅地处理这些错误，但为了简单起见，我们选择了在错误情形下停止程序。
 
-The browser signals the end of an HTTP request by sending two newline
-characters in a row, so to get one request from the stream, we take lines until
-we get a line that is the empty string. Once we’ve collected the lines into the
-vector, we’re printing them out using pretty debug formatting so that we can
-take a look at the instructions the web browser is sending to our server.
+浏览器通过在一行中连续发送两个换行符来表示 HTTP 请求的结束。因此，为了从流中获取一次请求，我们会不断取得行，直到遇到空字符串的行为止。一旦我们收集这些行到矢量值中，我们就会使用美观的调试格式将他们打印出来，以便查看 web 浏览器发送给服务器的指令。
 
-Let’s try this code! Start the program and make a request in a web browser
-again. Note that we’ll still get an error page in the browser, but our
-program’s output in the terminal will now look similar to this:
+我们来试试这段代码！启动程序并再次在浏览器中发出请求。请注意，我们仍然会在浏览器中得到错误页面，但终端中的程序输出现在将类似于下面这样：
 
 <!-- manual-regeneration
 cd listings/ch21-web-server/listing-21-02
@@ -203,24 +111,18 @@ Request: [
 ]
 ```
 
-Depending on your browser, you might get slightly different output. Now that
-we’re printing the request data, we can see why we get multiple connections
-from one browser request by looking at the path after `GET` in the first line
-of the request. If the repeated connections are all requesting _/_, we know the
-browser is trying to fetch _/_ repeatedly because it’s not getting a response
-from our program.
+根据咱们的浏览器，咱们可能会得到略有不同的输出。现在我们正在打印请求数据，通过查看请求第一行中 `GET` 之后的路径，我们可以发现为何我们会从一次浏览器请求得到多个连接。当重复的连接都在请求 /，我们就知道浏览器正在重复获取 /，因为他没有从我们的程序得到响应。
 
-Let’s break down this request data to understand what the browser is asking of
-our program.
+我们来分写这一请求数据，以了解浏览器向我们的程序请求什么。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="a-closer-look-at-an-http-request"></a>
 <a id="looking-closer-at-an-http-request"></a>
 
-### Looking More Closely at an HTTP Request
+### 仔细观察 HTTP 请求
 
-HTTP is a text-based protocol, and a request takes this format:
+HTTP 属于基于文本的协议，请求采用以下格式：
 
 ```text
 Method Request-URI HTTP-Version CRLF
@@ -228,41 +130,23 @@ headers CRLF
 message-body
 ```
 
-The first line is the _request line_ that holds information about what the
-client is requesting. The first part of the request line indicates the method
-being used, such as `GET` or `POST`, which describes how the client is making
-this request. Our client used a `GET` request, which means it is asking for
-information.
+第一行是 *请求行*，包含有关客户端请求的信息。请求行的第一部分指明了所使用的方法，比如 `GET` 或 `POST`，这描述了客户端是发出请求的方式。我们的客户端使用了 `GET` 请求，这意味着他正在请求信息。
 
-The next part of the request line is _/_, which indicates the _uniform resource
-identifier_ _(URI)_ the client is requesting: A URI is almost, but not quite,
-the same as a _uniform resource locator_ _(URL)_. The difference between URIs
-and URLs isn’t important for our purposes in this chapter, but the HTTP spec
-uses the term _URI_, so we can just mentally substitute _URL_ for _URI_ here.
+请求行的下一部分是 /，表示客户端正在请求的 *同一资源标识符，URI*：URI 与 *统一资源定位符，URL* 几乎相同。URI 与 URL 之间的区别对于我们这一章的目的来说不重要，但 HTTP 规范使用 URI 这一术语，因此我们在这里可以将 *URL* 理解为 *URI*。
 
-The last part is the HTTP version the client uses, and then the request line
-ends in a CRLF sequence. (_CRLF_ stands for _carriage return_ and _line feed_,
-which are terms from the typewriter days!) The CRLF sequence can also be
-written as `\r\n`, where `\r` is a carriage return and `\n` is a line feed. The
-_CRLF sequence_ separates the request line from the rest of the request data.
-Note that when the CRLF is printed, we see a new line start rather than `\r\n`.
+最后一部分是客户端使用的 HTTP 版本，随后请求行以 CRLF 序列结束。（CRLF 代表 *回车，carriage return* 和 *换行，line fedd*，这是打字机时代的术语！）CRLF 序列也可以写成 `\r\n`，其中的 `\r` 是回车符，`\n` 是换行符。CRLF 序列将请求行与请求数据的其余部分分开。请注意，当打印 CRLF 时，我们会看到一个新行开始，而不是 `\r\n`。
 
-Looking at the request line data we received from running our program so far,
-we see that `GET` is the method, _/_ is the request URI, and `HTTP/1.1` is the
-version.
+查看到目前为止运行程序所接收的请求行数据，我们可以看到，`GET` 是请求方法，`HTTP/1.1` 是请求 URI，HTTP/1.1 是版本。
 
-After the request line, the remaining lines starting from `Host:` onward are
-headers. `GET` requests have no body.
+在请求行之后，从 `Host:` 开始的其余行都属于头部。`GET` 请求没有请求体。
 
-Try making a request from a different browser or asking for a different
-address, such as _127.0.0.1:7878/test_, to see how the request data changes.
+请尝试从不同浏览器发出请求，或是请求不同的地址，比如 127.0.0.1:7878/test，以查看请求数据如何变化。
 
-Now that we know what the browser is asking for, let’s send back some data!
+现在我们知道浏览器请求了什么，我们就来发回一些数据！
 
-### Writing a Response
+### 编写响应
 
-We’re going to implement sending data in response to a client request.
-Responses have the following format:
+我们将实现发送数据以响应客户端请求。响应有着以下格式：
 
 ```text
 HTTP-Version Status-Code Reason-Phrase CRLF
@@ -270,24 +154,15 @@ headers CRLF
 message-body
 ```
 
-The first line is a _status line_ that contains the HTTP version used in the
-response, a numeric status code that summarizes the result of the request, and
-a reason phrase that provides a text description of the status code. After the
-CRLF sequence are any headers, another CRLF sequence, and the body of the
-response.
+第一行是 *状态行*，包含响应中使用的 HTTP 版本、概括请求结果的数字状态码，以及提供状态码文本描述的原因短语。CRLF 序列之后是任何的头部、另一个 CRLF 序列，以及响应正文。
 
-Here is an example response that uses HTTP version 1.1 and has a status code of
-200, an OK reason phrase, no headers, and no body:
+下面是一个示例响应，使用 HTTP 版本 1.1，状态码为 200、OK 原因短语、没有头部，也没有正文。
 
 ```text
 HTTP/1.1 200 OK\r\n\r\n
 ```
 
-The status code 200 is the standard success response. The text is a tiny
-successful HTTP response. Let’s write this to the stream as our response to a
-successful request! From the `handle_connection` function, remove the
-`println!` that was printing the request data and replace it with the code in
-Listing 21-3.
+状态代码 `handle_connection` 是标准的成功响应。这段文本便是个简短的成功 HTTP 响应。我们来写入这个响应到流，作为对成功请求的响应！在 `println!` 函数中，移除原本用于打印请求数据的 println!，并以下面清单 21-3 中的代码替换他。
 
 <Listing number="21-3" file-name="src/main.rs" caption="Writing a tiny successful HTTP response to the stream">
 
@@ -297,25 +172,13 @@ Listing 21-3.
 
 </Listing>
 
-The first new line defines the `response` variable that holds the success
-message’s data. Then, we call `as_bytes` on our `response` to convert the
-string data to bytes. The `write_all` method on `stream` takes a `&[u8]` and
-sends those bytes directly down the connection. Because the `write_all`
-operation could fail, we use `unwrap` on any error result as before. Again, in
-a real application, you would add error handling here.
+第一个新行定义了 `response` 变量，包含成功消息的数据。然后，我们对 `as_bytes` 调用 `response`，转换字符串数据为字节。`write_all` 上的 `stream` 方法取一个 `&[u8]`，并直接发送这些字节到连接。由于 `write_all` 操作可能失败，因此我们像之前一样对任何错误结果使用 `unwrap`。同样，在真实应用中，咱们将在这里添加错误处理。
 
-With these changes, let’s run our code and make a request. We’re no longer
-printing any data to the terminal, so we won’t see any output other than the
-output from Cargo. When you load _127.0.0.1:7878_ in a web browser, you should
-get a blank page instead of an error. You’ve just handcoded receiving an HTTP
-request and sending a response!
+在这些修改下，我们来运行代码并发出请求。我们不再打印任何数据到终端，因此除了 Cargo 的输出外，我们不会看到其他任何输出。当咱们在 web 浏览器中加载 127.0.0.1:7878 时，应得到一个空白页而不是报错。咱们刚刚亲手编写了接收 HTTP 请求并发送响应的代码！
 
-### Returning Real HTML
+### 返回真实的 HTML
 
-Let’s implement the functionality for returning more than a blank page. Create
-the new file _hello.html_ in the root of your project directory, not in the
-_src_ directory. You can input any HTML you want; Listing 21-4 shows one
-possibility.
+我们来实现返回非空白页面的功能。请在项目目录的根目录下，而非 src 目录中，创建新文件 hello.html。咱们可输入任何咱们想要的 HTML；下面清单 21-4 展示了一种可能。
 
 <Listing number="21-4" file-name="hello.html" caption="A sample HTML file to return in a response">
 
@@ -325,10 +188,7 @@ possibility.
 
 </Listing>
 
-This is a minimal HTML5 document with a heading and some text. To return this
-from the server when a request is received, we’ll modify `handle_connection` as
-shown in Listing 21-5 to read the HTML file, add it to the response as a body,
-and send it.
+这是个最小的 HTML5 文档，带有标题和一些文本。为了在收到请求时从服务器返回这个文档，我们将按照下面清单 21-5 中所示，修改 `handle_connection` 以读取这个 HTML 文件，作为响应正文添加到响应，然后发送他。
 
 <Listing number="21-5" file-name="src/main.rs" caption="Sending the contents of *hello.html* as the body of the response">
 
@@ -338,36 +198,17 @@ and send it.
 
 </Listing>
 
-We’ve added `fs` to the `use` statement to bring the standard library’s
-filesystem module into scope. The code for reading the contents of a file to a
-string should look familiar; we used it when we read the contents of a file for
-our I/O project in Listing 12-4.
+我们已添加 `fs` 到 `use` 语句中，以带入标准库的文件系统模组到作用域。读取文件内容到字符串中的代码应该看起来很熟悉；我们在 清单 12-4 中为 I/O 项目读取文件内容时就用过他。
 
-Next, we use `format!` to add the file’s contents as the body of the success
-response. To ensure a valid HTTP response, we add the `Content-Length` header,
-which is set to the size of our response body—in this case, the size of
-`hello.html`.
+接下来，我们使用 `format!` 宏，以添加文件内容为成功响应的正文。为了确保有效的 HTTP 响应，我们要添加 `Content-Length` 头部，其被设置为响应正文的大小 -- 在这一情形下，就是 `hello.html` 的大小。
 
-Run this code with `cargo run` and load _127.0.0.1:7878_ in your browser; you
-should see your HTML rendered!
+通过 `cargo run` 运行这段代码，并在浏览器中加载 127.0.0.1:7878；咱们应能看到咱们的 HTML 被渲染了！
 
-Currently, we’re ignoring the request data in `http_request` and just sending
-back the contents of the HTML file unconditionally. That means if you try
-requesting _127.0.0.1:7878/something-else_ in your browser, you’ll still get
-back this same HTML response. At the moment, our server is very limited and
-does not do what most web servers do. We want to customize our responses
-depending on the request and only send back the HTML file for a well-formed
-request to _/_.
+目前，我们忽略了 `http_request` 中的请求数据，而仅无条件地发回 HTML 文件的内容。这就意味着，当咱们在浏览器中尝试请求 127.0.0.1:7878/something-else 时，将仍然得到这一相同的 HTML 响应。目前，我们的服务器非常有限，不会实现大多数 web 服务器能做的事情。我们希望根据请求自定义响应，进而只针对到 / 的格式正确的请求，发回这个 HTML 文件。
 
-### Validating the Request and Selectively Responding
+### 验证请求并有选择地响应
 
-Right now, our web server will return the HTML in the file no matter what the
-client requested. Let’s add functionality to check that the browser is
-requesting _/_ before returning the HTML file and to return an error if the
-browser requests anything else. For this we need to modify `handle_connection`,
-as shown in Listing 21-6. This new code checks the content of the request
-received against what we know a request for _/_ looks like and adds `if` and
-`else` blocks to treat requests differently.
+目前，无论客户端请求什么，我们的 web 服务器都会返回该文件中的 HTML。我们来添加功能，在返回 HTML 文件之前先检查浏览器是否请求了 `handle_connection`，并在浏览器请求了其他路径时返回错误。为此，我们需要 `if`，如下清单 21-6 中所示。这段新代码会将收到的请求，与我们已知的 `else` 请求格式对比，并添加 if 和 else 代码块来以不同方式处理请求。
 
 <Listing number="21-6" file-name="src/main.rs" caption="Handling requests to */* differently from other requests">
 
@@ -377,30 +218,15 @@ received against what we know a request for _/_ looks like and adds `if` and
 
 </Listing>
 
-We’re only going to be looking at the first line of the HTTP request, so rather
-than reading the entire request into a vector, we’re calling `next` to get the
-first item from the iterator. The first `unwrap` takes care of the `Option` and
-stops the program if the iterator has no items. The second `unwrap` handles the
-`Result` and has the same effect as the `unwrap` that was in the `map` added in
-Listing 21-2.
+我们只会查看 HTTP 请求的第一行，因此我们不会读取整个请求到矢量值中，而是调用 `next` 获取迭代器中的第一个项目。第一个 `unwrap` 处理 `Option`，并在迭代器没有项目时停止程序。第二个 `unwrap` 处理 `Result`，并与清单 21-2 中添加的 `unwrap` 里的 `map` 有着相同效果。
 
-Next, we check the `request_line` to see if it equals the request line of a GET
-request to the _/_ path. If it does, the `if` block returns the contents of our
-HTML file.
+接下来，我们检查 `request_line` 是否等于到 `if` 路径的 GET 请求的请求行。当等于时，if 代码块就返回 HTML 文件的内容。
 
-If the `request_line` does _not_ equal the GET request to the _/_ path, it
-means we’ve received some other request. We’ll add code to the `else` block in
-a moment to respond to all other requests.
+当 `request_line` *不* 等于到 `else` 路径的 GET 请求时，则意味着我们收到了其他请求。稍后，我们将添加代码到 else 代码块，以响应所有其他请求。
 
-Run this code now and request _127.0.0.1:7878_; you should get the HTML in
-_hello.html_. If you make any other request, such as
-_127.0.0.1:7878/something-else_, you’ll get a connection error like those you
-saw when running the code in Listing 21-1 and Listing 21-2.
+现在请运行这段代码并请求 127.0.0.1:7878；咱们应该获取到 hello.html 中的 HTML。当咱们发出任何其他请求时，比如 127.0.0.1:7878/something-else，咱们将得到连接错误，就像咱们在运行清单 21-1 及清单 21-2 中的代码时看到的那样。
 
-Now let’s add the code in Listing 21-7 to the `else` block to return a response
-with the status code 404, which signals that the content for the request was
-not found. We’ll also return some HTML for a page to render in the browser
-indicating the response to the end user.
+现在，我们来将添加下面清单 21-7 中的代码到 `else` 代码块，以返回状态代码为 404 的响应，这表示请求的内容未找到。我们还将返回一些 HTML 代码，以便在浏览器中渲染页面，向最终用户表示响应。
 
 <Listing number="21-7" file-name="src/main.rs" caption="Responding with status code 404 and an error page if anything other than */* was requested">
 
@@ -410,11 +236,7 @@ indicating the response to the end user.
 
 </Listing>
 
-Here, our response has a status line with status code 404 and the reason phrase
-`NOT FOUND`. The body of the response will be the HTML in the file _404.html_.
-You’ll need to create a _404.html_ file next to _hello.html_ for the error
-page; again, feel free to use any HTML you want, or use the example HTML in
-Listing 21-8.
+在这里，我们的响应包含一个状态行，有着状态代码 `NOT FOUND` 以及原因短语 NOT FOUND。响应正文是文件 404.html 中的 HTML。咱们需要在 hello.html 旁边创建一个 404.html 文件作为错误页面； 同样，咱们可以随意使用任何 HTML，或者使用下面清单 21-8 中的示例 HTML。
 
 <Listing number="21-8" file-name="404.html" caption="Sample content for the page to send back with any 404 response">
 
@@ -424,24 +246,15 @@ Listing 21-8.
 
 </Listing>
 
-With these changes, run your server again. Requesting _127.0.0.1:7878_ should
-return the contents of _hello.html_, and any other request, like
-_127.0.0.1:7878/foo_, should return the error HTML from _404.html_.
+在这些修改下，再次运行咱们的服务器。请求 127.0.0.1:7878 应返回 hello.html 的内容，而任何其他请求，比如 127.0.0.1:7878/foo，都应返回 404.html 中的报错 HTML。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="a-touch-of-refactoring"></a>
 
-### Refactoring
+### 重构
 
-At the moment, the `if` and `else` blocks have a lot of repetition: They’re
-both reading files and writing the contents of the files to the stream. The
-only differences are the status line and the filename. Let’s make the code more
-concise by pulling out those differences into separate `if` and `else` lines
-that will assign the values of the status line and the filename to variables;
-we can then use those variables unconditionally in the code to read the file
-and write the response. Listing 21-9 shows the resultant code after replacing
-the large `if` and `else` blocks.
+目前，`if` 与 `else` 两个代码块有着很多重复：他们都在读取文件并写入文件内容到流。唯二区别就是状态行和文件名。我们来提取这些差异到单独的 `if` 和 `else` 行，把状态行和文件名指派给变量；这样，我们就可以在代码中，无条件地使用这两个变量来读取文件并写入响应。下面清单 21-9 展示了替换大段的 `if` 与 `else` 代码块后的最终代码。
 
 <Listing number="21-9" file-name="src/main.rs" caption="Refactoring the `if` and `else` blocks to contain only the code that differs between the two cases">
 
@@ -451,23 +264,10 @@ the large `if` and `else` blocks.
 
 </Listing>
 
-Now the `if` and `else` blocks only return the appropriate values for the
-status line and filename in a tuple; we then use destructuring to assign these
-two values to `status_line` and `filename` using a pattern in the `let`
-statement, as discussed in Chapter 19.
+现在，`if` 和 `else` 代码块仅返回元组中的状态行与文件名的相应值；然后，我们使用正如第 19 章讨论的 `status_line` 语句中的模式，使用解构特性将这两个值指派给 `filename` 与 `let`。
 
-The previously duplicated code is now outside the `if` and `else` blocks and
-uses the `status_line` and `filename` variables. This makes it easier to see
-the difference between the two cases, and it means we have only one place to
-update the code if we want to change how the file reading and response writing
-work. The behavior of the code in Listing 21-9 will be the same as that in
-Listing 21-7.
+之前重复的代码现在位于 `if` 与 `else` 代码块之外，并使用了 `status_line` 与 `filename` 两个变量。这样更容易看出两种情况之间的区别，而且这意味着当我们打算更改文件读取和响应写入的方式时，只有一个地方要更新代码。清单 21-9 中的代码的行为将与清单 21-8 中的相同。
 
-Awesome! We now have a simple web server in approximately 40 lines of Rust code
-that responds to one request with a page of content and responds to all other
-requests with a 404 response.
+太棒了！现在我们仅以大约 40 行 Rust 代码，就实现了个简单的 web 服务器，他会以一个内容页面响应一次请求，并以一个 404 的响应，响应所有其他请求。
 
-Currently, our server runs in a single thread, meaning it can only serve one
-request at a time. Let’s examine how that can be a problem by simulating some
-slow requests. Then, we’ll fix it so that our server can handle multiple
-requests at once.
+目前，我们的服务器在单线程下运行，这意味着他一次只能服务一个请求。我们来通过模拟一些缓慢请求，来看看这会如何成为一个问题。然后，我们将修复他，以便我们的服务器可以同时处理多个请求。

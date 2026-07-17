@@ -2,37 +2,14 @@
 
 <a id="streams"></a>
 
-## Streams: Futures in Sequence
+## 流：序列中的未来值
 
-Recall how we used the receiver for our async channel earlier in this chapter
-in the [“Message Passing”][17-02-messages]<!-- ignore --> section. The async
-`recv` method produces a sequence of items over time. This is an instance of a
-much more general pattern known as a _stream_. Many concepts are naturally
-represented as streams: items becoming available in a queue, chunks of data
-being pulled incrementally from the filesystem when the full data set is too
-large for the computer’s memory, or data arriving over the network over time.
-Because streams are futures, we can use them with any other kind of future and
-combine them in interesting ways. For example, we can batch up events to avoid
-triggering too many network calls, set timeouts on sequences of long-running
-operations, or throttle user interface events to avoid doing needless work.
+回顾在这一章早先 [“Message Passing”][17-02-messages] 小节中，我们对异步信道使用接收器的方式。异步的 `recv` 方法会随着时间推移生成项目序列。这属于一种称为 *流* 的更通用模式的实例。许多概念都自然地以流的形式呈现：项目以队列形式变得可用、当完整数据集相对计算机内存过大而从文件系统中增量提取的数据块，或是随时间推移通过网络到达的数据。由于流属于未来值，我们可以像使用任何其他类型的未来值一样使用他们，并以有趣的方式组合他们。例如，我们可以批量处理事件以避免触发过多的网络调用，可以对长时间运行的操作序列设置超时，或者对用户接口事件限流，以避免执行不必要的工作。 <!-- ignore -->
 
-We saw a sequence of items back in Chapter 13, when we looked at the Iterator
-trait in [“The Iterator Trait and the `next` Method”][iterator-trait]<!--
-ignore --> section, but there are two differences between iterators and the
-async channel receiver. The first difference is time: iterators are
-synchronous, while the channel receiver is asynchronous. The second difference
-is the API. When working directly with `Iterator`, we call its synchronous
-`next` method. With the `trpl::Receiver` stream in particular, we called an
-asynchronous `recv` method instead. Otherwise, these APIs feel very similar,
-and that similarity isn’t a coincidence. A stream is like an asynchronous form
-of iteration. Whereas the `trpl::Receiver` specifically waits to receive
-messages, though, the general-purpose stream API is much broader: it provides
-the next item the way `Iterator` does, but asynchronously.
+我们在第 13 章中 [“The Iterator Trait and the `next` Method”][iterator-trait] 小节研究迭代器时，曾见到过条目序列，但迭代器与异步信道接收器之间有两个区别。第一个区别是时间：迭代器是同步的，而信道接收器是异步的。第二个区别是 API。在直接使用 `Iterator` 时，我们调用他的同步的 `next` 方法。而特别是对于 `trpl::Receiver` 流，我们调用他的异步的 `recv` 方法。除此之外，这些 API 感觉非常相似，而这种相似性并非偶然。流就像迭代的异步形式。尽管 `trpl::Receiver` 专门等待接收消息，而通用的流 API 则范围更广：他以 `Iterator` 的方式提供下一项目，但以异步方式。 <!--
+ignore -->
 
-The similarity between iterators and streams in Rust means we can actually
-create a stream from any iterator. As with an iterator, we can work with a
-stream by calling its `next` method and then awaiting the output, as in Listing
-17-21, which won’t compile yet.
+Rust 中迭代器与流之间的相似性，意味着我们实际上可以从任何迭代器创建流。与迭代器一样，我们通过调用流的 `next` 方法然后等待输出来使用流，如下清单 17-30 中所示，其尚不会编译。
 
 <Listing number="17-21" caption="Creating a stream from an iterator and printing its values" file-name="src/main.rs">
 
@@ -42,13 +19,9 @@ stream by calling its `next` method and then awaiting the output, as in Listing
 
 </Listing>
 
-We start with an array of numbers, which we convert to an iterator and then
-call `map` on to double all the values. Then we convert the iterator into a
-stream using the `trpl::stream_from_iter` function. Next, we loop over the
-items in the stream as they arrive with the `while let` loop.
+我们以一个数字数组开始，将其转换为迭代器，然后调用 `map` 将所有值翻倍。然后我们使用 `trpl::stream_from_iter` 函数转换该迭代器为流。接下来，我们以 `while let` 循环在该流中的项目到达时遍历他们。
 
-Unfortunately, when we try to run the code, it doesn’t compile but instead
-reports that there’s no `next` method available:
+不幸的是，当我们尝试运行代码时，他不会编译，而是报告没有可用的 `next` 方法：
 
 <!-- manual-regeneration
 cd listings/ch17-async-await/listing-17-21
@@ -80,21 +53,11 @@ help: there is a method `try_next` with a similar name
    |                                        ~~~~~~~~
 ```
 
-As this output explains, the reason for the compiler error is that we need the
-right trait in scope to be able to use the `next` method. Given our discussion
-so far, you might reasonably expect that trait to be `Stream`, but it’s
-actually `StreamExt`. Short for _extension_, `Ext` is a common pattern in the
-Rust community for extending one trait with another.
+正如这一输出所解释的，编译器报错的原因是，我们需要作用域中的正确特质，才能使用 `next` 方法。根据我们到目前为止的讨论，咱们可能会合理地认为该特质是 `Stream`，但他实际上是 `StreamExt`。`Ext` 是 *extension* 的缩写，属于 Rust 社区中用于以一个特质扩展另一特质的常见模式。
 
-The `Stream` trait defines a low-level interface that effectively combines the
-`Iterator` and `Future` traits. `StreamExt` supplies a higher-level set of APIs
-on top of `Stream`, including the `next` method as well as other utility
-methods similar to those provided by the `Iterator` trait. `Stream` and
-`StreamExt` are not yet part of Rust’s standard library, but most ecosystem
-crates use similar definitions.
+`Stream` 特质定义了一个底层接口，其有效地结合了 `Iterator` 和 `Future` 特质。`StreamExt` 在 `Stream` 之上提供了一组更高层次的 API，包括 `next` 方法以及类似于 `Iterator` 特质提供的其他实用方法。`Stream` 和 `StreamExt` 目前均尚不属于 Rust 标准库的一部分，但大多数生态系统代码箱都使用类似的定义。
 
-The fix to the compiler error is to add a `use` statement for
-`trpl::StreamExt`, as in Listing 17-22.
+这一编译器报错的解决方法是，添加一个 `use` 的 `trpl::StreamExt` 语句，如下清单 17-22 中所示。
 
 <Listing number="17-22" caption="Successfully using an iterator as the basis for a stream" file-name="src/main.rs">
 
@@ -104,9 +67,7 @@ The fix to the compiler error is to add a `use` statement for
 
 </Listing>
 
-With all those pieces put together, this code works the way we want! What’s
-more, now that we have `StreamExt` in scope, we can use all of its utility
-methods, just as with iterators.
+在本章末尾，我们将对 `StreamExt` 与 StreamExt 两个特质进行更详细的解释，但现在咱们只需知道，Stream 特质定义了个可有效地结合 Iterator 与 Future 特质的底层接口。而 StreamExt 则在 Stream 之上，提供了一组更高级别的 API，包括 next 方法以及与由 Iterator 特质所提供的类似其他工具方法。Stream 与 StreamExt 还不是 Rust 标准库的一部分，但大多数生态代码箱，都使用了这同样的定义。
 
 [17-02-messages]: ch17-02-concurrency-with-async.html#message-passing
 [iterator-trait]: ch13-02-iterators.html#the-iterator-trait-and-the-next-method

@@ -1,22 +1,12 @@
-## Separating Modules into Different Files
+## 拆分模组为不同文件
 
-So far, all the examples in this chapter defined multiple modules in one file.
-When modules get large, you might want to move their definitions to a separate
-file to make the code easier to navigate.
+到目前为止，这一章的所有示例都在一个文件中定义了多个模组。当模组变大时，咱们就可能希望迁移他们的定义到单独文件，使代码更易于导览。
 
-For example, let’s start from the code in Listing 7-17 that had multiple
-restaurant modules. We’ll extract modules into files instead of having all the
-modules defined in the crate root file. In this case, the crate root file is
-_src/lib.rs_, but this procedure also works with binary crates whose crate root
-file is _src/main.rs_.
+例如，我们来从 [清单 7-17] 中有着多个餐厅模组的代码开始。我们将提取模组到文件中，而不是让全部模组都定义在代码箱的根文件中。在这一情形下，代码箱的根文件为 src/lib.rs，但这一过程也适用于根文件为 src/main.rs 的二进制代码箱。
 
-First, we’ll extract the `front_of_house` module to its own file. Remove the
-code inside the curly brackets for the `front_of_house` module, leaving only
-the `mod front_of_house;` declaration, so that _src/lib.rs_ contains the code
-shown in Listing 7-21. Note that this won’t compile until we create the
-_src/front_of_house.rs_ file in Listing 7-22.
+首先，我们将提取 `front_of_house` 模组到他自己的文件。请移除 `front_of_house` 模组花括号内的代码，只留下 `mod front_of_house;` 声明，以便 src/lib.rs 文件包含下面清单 7-21 中所示的代码。请注意，在我们创建清单 7-22 中的 src/front_of_house.rs 文件前，这段代码将不编译。
 
-<Listing number="7-21" file-name="src/lib.rs" caption="Declaring the `front_of_house` module whose body will be in *src/front_of_house.rs*">
+<Listing number="7-21" file-name="src/lib.rs" caption="声明`front_of_house` 模组，其主体将位于 src/front_of_house.rs">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-21-and-22/src/lib.rs}}
@@ -24,12 +14,9 @@ _src/front_of_house.rs_ file in Listing 7-22.
 
 </Listing>
 
-Next, place the code that was in the curly brackets into a new file named
-_src/front_of_house.rs_, as shown in Listing 7-22. The compiler knows to look
-in this file because it came across the module declaration in the crate root
-with the name `front_of_house`.
+接下来，将曾在那个花括符中的代码放入名为 src/front_of_house.rs 的新文件中，如下清单 7-22 中所示。编译器知道要在这个文件中查找，因为他在代码箱根中遇到了名为 `front_of_house` 的模组声明。
 
-<Listing number="7-22" file-name="src/front_of_house.rs" caption="Definitions inside the `front_of_house` module in *src/front_of_house.rs*">
+<Listing number="7-22" file-name="src/front_of_house.rs" caption="src/front_of_house.rs 中 `front_of_house` 模组内的定义">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-21-and-22/src/front_of_house.rs}}
@@ -37,22 +24,11 @@ with the name `front_of_house`.
 
 </Listing>
 
-Note that you only need to load a file using a `mod` declaration _once_ in your
-module tree. Once the compiler knows the file is part of the project (and knows
-where in the module tree the code resides because of where you’ve put the `mod`
-statement), other files in your project should refer to the loaded file’s code
-using a path to where it was declared, as covered in the [“Paths for Referring
-to an Item in the Module Tree”][paths]<!-- ignore --> section. In other words,
-`mod` is _not_ an “include” operation that you may have seen in other
-programming languages.
+请注意，咱们只需在模组树中使用 `mod` 声明加载文件 *一次*。一旦编译器知道了该文件属于项目的一部分（并由于咱们放置 `mod` 语句之处而知道代码在模组树中的何处），咱们项目中的其他文件，应使用其被声明处的路径来引用已加载文件的代码，如同 [“引用模组树中项目的路径”] 小节中所介绍的。换句话说，`mod` *不是* 咱们可能已在其他编程语言中看到的 “包含，include” 操作。
 
-Next, we’ll extract the `hosting` module to its own file. The process is a bit
-different because `hosting` is a child module of `front_of_house`, not of the
-root module. We’ll place the file for `hosting` in a new directory that will be
-named for its ancestors in the module tree, in this case _src/front_of_house_.
+接下来，我们将提取 `hosting` 模组到他自己的文件。这个过程略有不同，因为 `hosting` 是 `front_of_house`，而非根模组的子模组。我们将把 `hosting` 的文件放在一个新的目录中，该目录将以模组树中他的父辈命名，在此情形下即为 src/front_of_house。
 
-To start moving `hosting`, we change _src/front_of_house.rs_ to contain only
-the declaration of the `hosting` module:
+要开始迁移 `hosting`，我们修改 src/front_of_house.rs 为只包含 `hosting` 模组的声明：
 
 <Listing file-name="src/front_of_house.rs">
 
@@ -62,8 +38,7 @@ the declaration of the `hosting` module:
 
 </Listing>
 
-Then, we create a _src/front_of_house_ directory and a _hosting.rs_ file to
-contain the definitions made in the `hosting` module:
+然后，我们创建一个 src/front_of_house 目录及一个 hosting.rs 文件，来包含构造于 `hosting` 模组中的定义：
 
 <Listing file-name="src/front_of_house/hosting.rs">
 
@@ -73,57 +48,36 @@ contain the definitions made in the `hosting` module:
 
 </Listing>
 
-If we instead put _hosting.rs_ in the _src_ directory, the compiler would
-expect the _hosting.rs_ code to be in a `hosting` module declared in the crate
-root and not declared as a child of the `front_of_house` module. The
-compiler’s rules for which files to check for which modules’ code mean the
-directories and files more closely match the module tree.
+相反若我们放置 hosting.rs 于 src 目录下，编译器就会期望 `hosting` 模组中的 hosting.rs 代码被声明于代码箱根中，而不是声明为 `front_of_house` 模组的子模组。编译器关于 “检查哪些文件以获取哪些模组的代码” 规则，意味着目录和文件会紧密地匹配模组树。
 
-> ### Alternate File Paths
+> **备用文件路径**
 >
-> So far we’ve covered the most idiomatic file paths the Rust compiler uses,
-> but Rust also supports an older style of file path. For a module named
-> `front_of_house` declared in the crate root, the compiler will look for the
-> module’s code in:
+> 到目前为止，我们已介绍了 Rust 编译器用到的最惯用的文件路径，但 Rust 还支持一种较早的文件路径样式。对于声明于代码箱根中名为 `front_of_house` 的模组，编译器将在以下位置查找该模组的代码：
 >
-> - _src/front_of_house.rs_ (what we covered)
-> - _src/front_of_house/mod.rs_ (older style, still supported path)
+> - src/front_of_house.rs（我们介绍的）；
+> - src/front_of_house/mod.rs（较早样式，仍受支持的路径）。
 >
-> For a module named `hosting` that is a submodule of `front_of_house`, the
-> compiler will look for the module’s code in:
+> 对于名为 `hosting` 属于 `front_of_house` 子模组的模组，编译器将在以下位置查找该模组的代码：
 >
-> - _src/front_of_house/hosting.rs_ (what we covered)
-> - _src/front_of_house/hosting/mod.rs_ (older style, still supported path)
+> - src/front_of_house/hosting.rs（我们介绍的）；
+> - src/front_of_house/hosting/mod.rs（较早样式，仍受支持的路径）。
 >
-> If you use both styles for the same module, you’ll get a compiler error.
-> Using a mix of both styles for different modules in the same project is
-> allowed but might be confusing for people navigating your project.
+> 若咱们对同一模组使用两种样式，咱们将得到一个编译器报错。虽然在同一项目中针对不同模组混合使用两种样式是允许的，但这可能会让浏览咱们项目的人感到困惑。
 >
-> The main downside to the style that uses files named _mod.rs_ is that your
-> project can end up with many files named _mod.rs_, which can get confusing
-> when you have them open in your editor at the same time.
+> 使用名为 mod.rs 文件的样式的主要缺点是，咱们的项目最终会有大量名为 mod.rs 的文件，当咱们同时在编辑器中打开他们时，这会造成混淆。
 
-We’ve moved each module’s code to a separate file, and the module tree remains
-the same. The function calls in `eat_at_restaurant` will work without any
-modification, even though the definitions live in different files. This
-technique lets you move modules to new files as they grow in size.
+我们已经迁移各个模组的代码到单独文件，而模组树保持不变。`eat_at_restaurant` 中的函数调用在无需任何修改下仍将有效，即使定义位于不同文件。这一技巧允许咱们在模组大小增加时，迁移他们到新的文件。
 
-Note that the `pub use crate::front_of_house::hosting` statement in
-_src/lib.rs_ also hasn’t changed, nor does `use` have any impact on what files
-are compiled as part of the crate. The `mod` keyword declares modules, and Rust
-looks in a file with the same name as the module for the code that goes into
-that module.
+请注意，src/lib.rs 中的 `pub use crate::front_of_house::hosting` 同样未曾改变，`use` 语句既对作为代码箱一部分编译的文件也无任何影响。`mod` 关键字声明模组，而 Rust 会在与模组同名的文件中查找进入该模组的代码。
 
-## Summary
+## 本章小节
 
-Rust lets you split a package into multiple crates and a crate into modules so
-that you can refer to items defined in one module from another module. You can
-do this by specifying absolute or relative paths. These paths can be brought
-into scope with a `use` statement so that you can use a shorter path for
-multiple uses of the item in that scope. Module code is private by default, but
-you can make definitions public by adding the `pub` keyword.
+Rust 允许咱们将包拆分为多个代码箱，并拆分代码箱为模组，以便咱们可以在一个模组中引用定义在另一模组中的项目。咱们可通过指定绝对路径或相对路径做到这点。这些路径可在 `use` 语句下带入作用域，以便咱们可以针对项目在该作用域中的多次引用，而使用较短的路径。默认情况下模组代码是私有的，但咱们可通过添加 `pub` 关键字，构造定义为公开。
 
-In the next chapter, we’ll look at some collection data structures in the
-standard library that you can use in your neatly organized code.
+在下一章中，我们将探讨标准库中的一些集合数据结构，咱们可在咱们良好组织的代码中使用他们。
+
+
+
+<!-- ignore -->
 
 [paths]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html

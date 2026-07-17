@@ -2,41 +2,21 @@
 
 <a id="using-message-passing-to-transfer-data-between-threads"></a>
 
-## Transfer Data Between Threads with Message Passing
+## 通过消息传递在线程间传输数据
 
-One increasingly popular approach to ensuring safe concurrency is message
-passing, where threads or actors communicate by sending each other messages
-containing data. Here’s the idea in a slogan from [the Go language documentation](https://golang.org/doc/effective_go.html#concurrency):
-“Do not communicate by sharing memory; instead, share memory by communicating.”
+的确保安全并发的一种日益流行的方法，便是 *消息传递*，其中线程或参与者通过相互发送包含数据的消息来进行通信。下面是 [Go 语言文档](https://golang.org/doc/effective_go.html#concurrency) 中的一句口号概括了这一理念：“不要通过共享内存来通信；相反，通过通信来共享内存。”
 
-To accomplish message-sending concurrency, Rust’s standard library provides an
-implementation of channels. A _channel_ is a general programming concept by
-which data is sent from one thread to another.
+为了实现消息发送式的并发，Rust 标准库提供了一种信道的实现。所谓 *信道*，属于一种通用的编成概念，数据通过信道从一个线程发送到另一线程。
 
-You can imagine a channel in programming as being like a directional channel of
-water, such as a stream or a river. If you put something like a rubber duck
-into a river, it will travel downstream to the end of the waterway.
+咱们可以把编程中的信道，想象为有方向的水渠，比如小溪或河流。当咱们把塑胶小黄鸭之类的东西投入河中时，他就会顺流而下，到达该水道的尽头。
 
-A channel has two halves: a transmitter and a receiver. The transmitter half is
-the upstream location where you put the rubber duck into the river, and the
-receiver half is where the rubber duck ends up downstream. One part of your
-code calls methods on the transmitter with the data you want to send, and
-another part checks the receiving end for arriving messages. A channel is said
-to be _closed_ if either the transmitter or receiver half is dropped.
+信道有两个部分：发送端和接收端。发送端在上游位置，即咱们把小黄鸭投入河中的地方；接收端是小黄鸭顺流而下最终到达的位置。咱们代码的一部分以咱们打算发送的数据调用发送端的方法，另一部分则检查接收端是否有到达的消息。当发射端或接收端之一被弃用时，则称信道 *关闭*。
 
-Here, we’ll work up to a program that has one thread to generate values and
-send them down a channel, and another thread that will receive the values and
-print them out. We’ll be sending simple values between threads using a channel
-to illustrate the feature. Once you’re familiar with the technique, you could
-use channels for any threads that need to communicate with each other, such as
-a chat system or a system where many threads perform parts of a calculation and
-send the parts to one thread that aggregates the results.
+在这里，我们将逐步实现一个程序，他有一个线程生成值并发送这些值到信道，而另一线程将接收这些值并打印出他们。我们将使用信道在线程之间发送简单值，以此演示这一特性。一旦咱们熟悉了这项技巧，咱们就可以针对任何需要相互通讯的线程使用信道，比如聊天系统，或由许多线程分别执行计算的各个部分，并发送结果到一个负责汇总结果的线程的系统。
 
-First, in Listing 16-6, we’ll create a channel but not do anything with it.
-Note that this won’t compile yet because Rust can’t tell what type of values we
-want to send over the channel.
+首先，在下面的清单 16-6 中，我们将创建出一个信道，但暂不对其执行任何操作。请注意，这还不会编译，因为 Rust 无法判断我们打算通过信道发送何种类型的值。
 
-<Listing number="16-6" file-name="src/main.rs" caption="Creating a channel and assigning the two halves to `tx` and `rx`">
+<Listing number="16-6" file-name="src/main.rs" caption="创建信道，并指派两端给 `tx` 和 `rx`">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch16-fearless-concurrency/listing-16-06/src/main.rs}}
@@ -44,29 +24,11 @@ want to send over the channel.
 
 </Listing>
 
-We create a new channel using the `mpsc::channel` function; `mpsc` stands for
-_multiple producer, single consumer_. In short, the way Rust’s standard library
-implements channels means a channel can have multiple _sending_ ends that
-produce values but only one _receiving_ end that consumes those values. Imagine
-multiple streams flowing together into one big river: Everything sent down any
-of the streams will end up in one river at the end. We’ll start with a single
-producer for now, but we’ll add multiple producers when we get this example
-working.
+我们使用 `mpsc::channel` 函数创建一个新的信道；`mpsc` 代表 *multiple producer, single consumer*。简而言之，Rust 标准库实现信道的方式，意味着信道可以有多个产生值的 *发送* 端，却只能有一个消费这些值的 *接收* 端。请设想有多条小溪汇聚成一条大河：从任何一条小溪送出的内容最终都会汇入同一条大河。我们现在将以单个生产者开始，但当我们让这个示例正常工作后，我们将添加多个生产者。
 
-The `mpsc::channel` function returns a tuple, the first element of which is the
-sending end—the transmitter—and the second element of which is the receiving
-end—the receiver. The abbreviations `tx` and `rx` are traditionally used in
-many fields for _transmitter_ and _receiver_, respectively, so we name our
-variables as such to indicate each end. We’re using a `let` statement with a
-pattern that destructures the tuples; we’ll discuss the use of patterns in
-`let` statements and destructuring in Chapter 19. For now, know that using a
-`let` statement in this way is a convenient approach to extract the pieces of
-the tuple returned by `mpsc::channel`.
+`mpsc::channel` 函数返回一个元组，其中第一个元素是发送端 -- 发送器 -- 第二个元素是接收端 -- 接收器。两个缩写 `tx` 与 `rx`，传统上在许多领域都分别用于 *transmitter* 和 *receiver*，因此我们这样命名变量来表示两端。我们以一种解构元组的模式使用了 `let` 语句；我们将在第 19 章中讨论在 `let` 语句中模式的使用和解构。目前只需知道，以这种方式使用 `let` 语句，是提取 `mpsc::channel` 返回的元组中各部分的便捷方式。
 
-Let’s move the transmitting end into a spawned thread and have it send one
-string so that the spawned thread is communicating with the main thread, as
-shown in Listing 16-7. This is like putting a rubber duck in the river upstream
-or sending a chat message from one thread to another.
+我们来迁移发送端到一个生成的线程中，并让他发送一个字符串，从而使生成的线程与主线程通信，如下清单 16-7 中所示。这就像在河的上游投入一只小黄鸭，或者像从一个线程发送聊天消息给另一线程。
 
 <Listing number="16-7" file-name="src/main.rs" caption='Moving `tx` to a spawned thread and sending `"hi"`'>
 
@@ -76,21 +38,11 @@ or sending a chat message from one thread to another.
 
 </Listing>
 
-Again, we’re using `thread::spawn` to create a new thread and then using `move`
-to move `tx` into the closure so that the spawned thread owns `tx`. The spawned
-thread needs to own the transmitter to be able to send messages through the
-channel.
+同样，我们使用 `thread::spawn` 创建一个新线程，然后使用 `move` 把迁移 `tx` 到闭包中，以便生成的线程拥有 `tx`（译注：rx 为什么不会迁移到闭包中？）。生成的线程需要拥有发送器才能通过信道发送消息。
 
-The transmitter has a `send` method that takes the value we want to send. The
-`send` method returns a `Result<T, E>` type, so if the receiver has already
-been dropped and there’s nowhere to send a value, the send operation will
-return an error. In this example, we’re calling `unwrap` to panic in case of an
-error. But in a real application, we would handle it properly: Return to
-Chapter 9 to review strategies for proper error handling.
+发送器有个 `send` 方法，取我们打算发送的值。`send` 方法返回一个 `Result<T, E>` 类型，因此当接收器已被弃用而没有地方发送值时，发送操作将返回错误。在这个示例中，我们调用 `unwrap` 来在发生错误的情形下终止运行。但在实际应用中，我们会妥善处理错误：请返回第 9 章，复习正确的错误处理策略。
 
-In Listing 16-8, we’ll get the value from the receiver in the main thread. This
-is like retrieving the rubber duck from the water at the end of the river or
-receiving a chat message.
+在下面清单 16-8 中，我们将在主线程中获取接收器中的值。这就像是在河流尽头捞起水中的小黄鸭，或者接收一条聊天消息。
 
 <Listing number="16-8" file-name="src/main.rs" caption='Receiving the value `"hi"` in the main thread and printing it'>
 
@@ -100,26 +52,13 @@ receiving a chat message.
 
 </Listing>
 
-The receiver has two useful methods: `recv` and `try_recv`. We’re using `recv`,
-short for _receive_, which will block the main thread’s execution and wait
-until a value is sent down the channel. Once a value is sent, `recv` will
-return it in a `Result<T, E>`. When the transmitter closes, `recv` will return
-an error to signal that no more values will be coming.
+接收器有两个有用的方法：`recv` 和 `try_recv`。我们使用了 `recv`，即 *receive* 的简写，他将阻塞主线程的执行并等待，直到有值下发到信道。一旦有值发出，`recv` 将在 `Result<T, E>` 中返回他。当发射器关闭时，`recv` 将返回一个错误，表明不再有值传入。
 
-The `try_recv` method doesn’t block, but will instead return a `Result<T, E>`
-immediately: an `Ok` value holding a message if one is available and an `Err`
-value if there aren’t any messages this time. Using `try_recv` is useful if
-this thread has other work to do while waiting for messages: We could write a
-loop that calls `try_recv` every so often, handles a message if one is
-available, and otherwise does other work for a little while until checking
-again.
+`try_recv` 方法不会阻塞，而是会立即返回一个 `Result<T, E>`：当有可用消息时，则返回一个包含消息的 `Ok` 值；当此时没有任何消息时，则返回一个 `Err` 值。若该线程在等待消息时还有其他工作要做，则使用 `try_recv` 非常有用：我们可以编写一个循环，每隔一段时间调用 `try_recv`，在有消息时处理消息，否则先执行其他工作一段时间，然后再次检查有无消息。
 
-We’ve used `recv` in this example for simplicity; we don’t have any other work
-for the main thread to do other than wait for messages, so blocking the main
-thread is appropriate.
+出于简化原因，我们在这个实例中使用了 `recv`；除了等待消息之外，我们在主线程中并无其他工作要做，因此阻塞主线程是合适的。
 
-When we run the code in Listing 16-8, we’ll see the value printed from the main
-thread:
+当我们运行清单 16-8 中的代码时，我们将看到该值在主线程中打印：
 
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
@@ -129,23 +68,17 @@ changes in the compiler -->
 Got: hi
 ```
 
-Perfect!
+太棒了！
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="channels-and-ownership-transference"></a>
 
-### Transferring Ownership Through Channels
+### 通过信道转移所有权
 
-The ownership rules play a vital role in message sending because they help you
-write safe, concurrent code. Preventing errors in concurrent programming is the
-advantage of thinking about ownership throughout your Rust programs. Let’s do
-an experiment to show how channels and ownership work together to prevent
-problems: We’ll try to use a `val` value in the spawned thread _after_ we’ve
-sent it down the channel. Try compiling the code in Listing 16-9 to see why
-this code isn’t allowed.
+所有权规则在消息发送中起着至关重要作用，因为他们帮助咱们编写安全、并发的代码。关注整个 Rust 程序的所有权的优势在于，可以防止并发编程中的错误。我们来完成一个实验，展示信道与所有权怎样一起协同工作以防止问题：我们将尝试在下发 `val` 值到信道 *之后*，再在生成的线程中使用该值。请尝试编译下面清单 16-9 中的代码，了解为何这段代码不被允许：
 
-<Listing number="16-9" file-name="src/main.rs" caption="Attempting to use `val` after we’ve sent it down the channel">
+<Listing number="16-9" file-name="src/main.rs" caption="在我们已下发 `val` 到信道后，再尝试使用他">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch16-fearless-concurrency/listing-16-09/src/main.rs}}
@@ -153,36 +86,25 @@ this code isn’t allowed.
 
 </Listing>
 
-Here, we try to print `val` after we’ve sent it down the channel via `tx.send`.
-Allowing this would be a bad idea: Once the value has been sent to another
-thread, that thread could modify or drop it before we try to use the value
-again. Potentially, the other thread’s modifications could cause errors or
-unexpected results due to inconsistent or nonexistent data. However, Rust gives
-us an error if we try to compile the code in Listing 16-9:
+在这里，我们在通过 `val` 下发 `tx.send` 到信道后，尝试打印他。允许这样做将是个糟糕的主意：一旦值被发送到另一线程，该线程就可以在我们尝试再次使用该值之前，修改或弃用他。由于数据不一致或不存在，另一线程的修改可能会导致错误或未预期的结果。不过，当我们尝试编译清单 16-9 中的代码时，Rust 会给予咱们一个报错：
 
 ```console
 {{#include ../listings/ch16-fearless-concurrency/listing-16-09/output.txt}}
 ```
 
-Our concurrency mistake has caused a compile-time error. The `send` function
-takes ownership of its parameter, and when the value is moved the receiver
-takes ownership of it. This stops us from accidentally using the value again
-after sending it; the ownership system checks that everything is okay.
+我们的并发错误导致了一个编译时错误。`send` 函数会取得其参数的所有权，而在值被迁移后，接收器会取得他的所有权。这可以防止我们在发送值后意外地再次使用该值；所有权系统会检查一切是否正常。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="sending-multiple-values-and-seeing-the-receiver-waiting"></a>
 
-### Sending Multiple Values
+### 发送多个值
 
-The code in Listing 16-8 compiled and ran, but it didn’t clearly show us that
-two separate threads were talking to each other over the channel.
+[清单 16-8] 中的代码虽然编译并运行了，但并未清晰地向我们展示两个独立线程正在通过信道相互通信。
 
-In Listing 16-10, we’ve made some modifications that will prove the code in
-Listing 16-8 is running concurrently: The spawned thread will now send multiple
-messages and pause for a second between each message.
+在下面清单 16-10 中，我们进行了一些修改，以证明清单 16-8 中代码是并发运行的：生成的线程现在将发送多条消息，并在每条消息之间暂停一秒钟。
 
-<Listing number="16-10" file-name="src/main.rs" caption="Sending multiple messages and pausing between each one">
+<Listing number="16-10" file-name="src/main.rs" caption="发送多条消息并在每次发送之间暂停">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch16-fearless-concurrency/listing-16-10/src/main.rs}}
@@ -190,17 +112,11 @@ messages and pause for a second between each message.
 
 </Listing>
 
-This time, the spawned thread has a vector of strings that we want to send to
-the main thread. We iterate over them, sending each individually, and pause
-between each by calling the `thread::sleep` function with a `Duration` value of
-one second.
+这次，生成的线程有个我们打算发送给主线程的字符串矢量值。我们遍历他们、单独发送每个字符串，并以一秒的 `thread::sleep` 值调用 `Duration`，在每次发送间暂停。
 
-In the main thread, we’re not calling the `recv` function explicitly anymore:
-Instead, we’re treating `rx` as an iterator. For each value received, we’re
-printing it. When the channel is closed, iteration will end.
+在主线程中，我们不再显式调用 `recv` 函数：相反，我们视 `rx` 为一个迭代器。对于接收到的每个值，我们都打印他。当信道关闭时，迭代将结束。
 
-When running the code in Listing 16-10, you should see the following output
-with a one-second pause in between each line:
+运行清单 16-10 中的代码时，咱们应看到以下输出，每行之间有一秒的暂停：
 
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
@@ -213,22 +129,17 @@ Got: the
 Got: thread
 ```
 
-Because we don’t have any code that pauses or delays in the `for` loop in the
-main thread, we can tell that the main thread is waiting to receive values from
-the spawned thread.
+由于我们在主线程中的 `for` 循环中没有任何暂停或延迟的代码，我们可以判断主线程正在等待接收生成的线程中的值。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="creating-multiple-producers-by-cloning-the-transmitter"></a>
 
-### Creating Multiple Producers
+### 创建多个生产者
 
-Earlier we mentioned that `mpsc` was an acronym for _multiple producer, single
-consumer_. Let’s put `mpsc` to use and expand the code in Listing 16-10 to
-create multiple threads that all send values to the same receiver. We can do so
-by cloning the transmitter, as shown in Listing 16-11.
+早前咱们曾提到，`mpsc` 是 *multiple producer, single consumer* 的首字母缩写。我们来真正使用 `mpsc`，并扩展清单 16-10 中的代码为创建多个线程，都发送值到同一个接收器。我们可以通过克隆发射器实现这点，如下清单 16-11 中所示。
 
-<Listing number="16-11" file-name="src/main.rs" caption="Sending multiple messages from multiple producers">
+<Listing number="16-11" file-name="src/main.rs" caption="从多个生产者发送多条消息">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch16-fearless-concurrency/listing-16-11/src/main.rs:here}}
@@ -236,12 +147,9 @@ by cloning the transmitter, as shown in Listing 16-11.
 
 </Listing>
 
-This time, before we create the first spawned thread, we call `clone` on the
-transmitter. This will give us a new transmitter we can pass to the first
-spawned thread. We pass the original transmitter to a second spawned thread.
-This gives us two threads, each sending different messages to the one receiver.
+这次，在创建第一个生成的线程之前，我们县对发送器调用 `clone` 方法。这将给予我们一个新的发送器，我们可以传递给第一个生成的线程。我们传递原始发送器给第二个生成的线程。这给予我们两个线程，二者发送不同消息给一个接收器。
 
-When you run the code, your output should look something like this:
+在咱们运行这段代码时，咱们的输出看起来应像下面这样：
 
 <!-- Not extracting output because changes to this output aren't significant;
 the changes are likely to be due to the threads running differently rather than
@@ -258,10 +166,6 @@ Got: thread
 Got: you
 ```
 
-You might see the values in another order, depending on your system. This is
-what makes concurrency interesting as well as difficult. If you experiment with
-`thread::sleep`, giving it various values in the different threads, each run
-will be more nondeterministic and create different output each time.
+根据咱们的系统的不同，咱们可能会看到别的顺序的这些值。这正是使得并发既有趣而又困难的原因所在。当咱们以 `thread::sleep` 试验时，那么在不同线程中给予他不同的值，那么每次运行将更具不确定性，并且每次都会产生不同的输出。
 
-Now that we’ve looked at how channels work, let’s look at a different method of
-concurrency.
+现在我们已经了解了信道的工作原理，我们来看看另一种不同的并发方法。

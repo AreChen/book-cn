@@ -1,37 +1,24 @@
-## Appendix D: Useful Development Tools
+## 附录 D：有用的开发工具
 
-In this appendix, we talk about some useful development tools that the Rust
-project provides. We’ll look at automatic formatting, quick ways to apply
-warning fixes, a linter, and integrating with IDEs.
+在这个附录中，我们讨论 Rust 项目提供的一些有用的开发工具。我们将探讨自动格式化、快速修复告警的方法、代码静态分析工具，以及与 IDE 的集成。
 
-### Automatic Formatting with `rustfmt`
+### 通过 `rustfmt` 自动格式化
 
-The `rustfmt` tool reformats your code according to the community code style.
-Many collaborative projects use `rustfmt` to prevent arguments about which
-style to use when writing Rust: Everyone formats their code using the tool.
+`rustfmt` 工具会依据社区编码风格，重新格式化咱们的代码。许多协作项目都使用 `rustfmt`，以防止在编写 Rust 时因风格选择而产生争议：每个人都使用这个工具来格式化自己的代码。
 
-Rust installations include `rustfmt` by default, so you should already have the
-programs `rustfmt` and `cargo-fmt` on your system. These two commands are
-analogous to `rustc` and `cargo` in that `rustfmt` allows finer grained control
-and `cargo-fmt` understands conventions of a project that uses Cargo. To format
-any Cargo project, enter the following:
+Rust 的安装默认包含 `rustfmt`，因此咱们的系统上应该已经安装了 `rustfmt` 和 `cargo-fmt` 这两个程序。这两个命令与 `rustc` 和 `cargo` 类似：`rustfmt` 允许更细粒度的控制，而 `cargo-fmt` 则能理解使用 Cargo 项目的约定。要格式化任何 Cargo 项目，请输入以下命令：
 
 ```console
 $ cargo fmt
 ```
 
-Running this command reformats all the Rust code in the current crate. This
-should only change the code style, not the code semantics. For more information
-on `rustfmt`, see [its documentation][rustfmt].
+运行这个命令将重新格式化当前代码箱中的所有 Rust 代码。这只应改变代码的格式，不会改变代码的语义。有关 `rustfmt` 的更多信息，请参阅 [its documentation][rustfmt].
 
-### Fix Your Code with `rustfix`
+### 通过 `rustfix` 修复代码
 
-The `rustfix` tool is included with Rust installations and can automatically
-fix compiler warnings that have a clear way to correct the problem that’s
-likely what you want. You’ve probably seen compiler warnings before. For
-example, consider this code:
+`rustfix` 工具包含在 Rust 安装中，能够修复那些有明确修正问题的方法的一些编译器告警，大致是咱们希望的。咱们可能之前就已见到过编译器告警。例如，设想下面这段代码：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust
 fn main() {
@@ -40,8 +27,7 @@ fn main() {
 }
 ```
 
-Here, we’re defining the variable `x` as mutable, but we never actually mutate
-it. Rust warns us about that:
+在这里，我们定义变量 `x` 为可变的，但我们实际上从未真正改变他。Rust 会就此发出告警：
 
 ```console
 $ cargo build
@@ -57,9 +43,8 @@ warning: variable does not need to be mutable
   = note: `#[warn(unused_mut)]` on by default
 ```
 
-The warning suggests that we remove the `mut` keyword. We can automatically
-apply that suggestion using the `rustfix` tool by running the command `cargo
-fix`:
+这个告警建议我们移除 `mut` 关键字。我们可以使用 `rustfix` 工具运行 `cargo
+fix` 命令，自动应用这一建议：
 
 ```console
 $ cargo fix
@@ -68,10 +53,9 @@ $ cargo fix
     Finished dev [unoptimized + debuginfo] target(s) in 0.59s
 ```
 
-When we look at _src/main.rs_ again, we’ll see that `cargo fix` has changed the
-code:
+当我们再次查看 `cargo fix` 时，将发现 cargo fix 已修改了代码：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust
 fn main() {
@@ -80,26 +64,22 @@ fn main() {
 }
 ```
 
-The variable `x` is now immutable, and the warning no longer appears.
+变量 `x` 现在是不可变的，并且告警也不再出现。
 
-You can also use the `cargo fix` command to transition your code between
-different Rust editions. Editions are covered in [Appendix E][editions]<!--
-ignore -->.
+咱们还可以使用 `cargo fix` 命令在不同的 Rust 版本之间转换代码。版本在 [Appendix E][editions] 中得以介绍。 <!--
+ignore -->
 
-### More Lints with Clippy
+### Clippy 下的更多代码静态分析
 
-The Clippy tool is a collection of lints to analyze your code so that you can
-catch common mistakes and improve your Rust code. Clippy is included with
-standard Rust installations.
+Clippy 工具 是一个用于分析代码的静态分析工具的集合，以便咱们可以发现常见错误，仅而改进 Rust 代码。
 
-To run Clippy’s lints on any Cargo project, enter the following:
+要对任何 Cargo 项目运行 Clippy 的静态分析工具，请输入以下命令：
 
 ```console
 $ cargo clippy
 ```
 
-For example, say you write a program that uses an approximation of a
-mathematical constant, such as pi, as this program does:
+例如，假设咱们编写了个程序，使用某个数学常数，比如 π 的近似值，就像下面这个程序所做的那样：
 
 <Listing file-name="src/main.rs">
 
@@ -113,7 +93,7 @@ fn main() {
 
 </Listing>
 
-Running `cargo clippy` on this project results in this error:
+对这个项目上运行 `cargo clippy` 会得到下面这个报错：
 
 ```text
 error: approximate value of `f{32, 64}::consts::PI` found
@@ -127,11 +107,9 @@ error: approximate value of `f{32, 64}::consts::PI` found
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
 ```
 
-This error lets you know that Rust already has a more precise `PI` constant
-defined, and that your program would be more correct if you used the constant
-instead. You would then change your code to use the `PI` constant.
+这个报错让咱们知道，Rust 已经定义了个更精确的 `PI` 常量，并且若咱们使用这个常量时，程序将更为正确。因此，咱们就要修改代码为使用 `PI` 常量。
 
-The following code doesn’t result in any errors or warnings from Clippy:
+以下代码不会导致来自 Clippy 的任何报错或告警：
 
 <Listing file-name="src/main.rs">
 
@@ -145,21 +123,14 @@ fn main() {
 
 </Listing>
 
-For more information on Clippy, see [its documentation][clippy].
+有关 Clippy 的更多信息，请参阅 [its documentation][clippy]。
 
-### IDE Integration Using `rust-analyzer`
+### 使用 `rust-analyzer` 的 IDE 集成
 
-To help with IDE integration, the Rust community recommends using
-[`rust-analyzer`][rust-analyzer]<!-- ignore -->. This tool is a set of
-compiler-centric utilities that speak [Language Server Protocol][lsp]<!--
-ignore -->, which is a specification for IDEs and programming languages to
-communicate with each other. Different clients can use `rust-analyzer`, such as
-[the Rust analyzer plug-in for Visual Studio Code][vscode].
+为了帮助 IDE 集成，Rust 社区建议使用 [`rust-analyzer`][rust-analyzer]。这个工具是一组以编译器为中心的实用程序，支持 [Language Server Protocol][lsp] ，该协议是 IDE 和编程语言之间相互通信的规范。不同客户端均可以使用 `rust-analyzer`，比如 [the Rust analyzer plug-in for Visual Studio Code][vscode]。 <!-- ignore --> <!--
+ignore -->
 
-Visit the `rust-analyzer` project’s [home page][rust-analyzer]<!-- ignore -->
-for installation instructions, then install the language server support in your
-particular IDE. Your IDE will gain capabilities such as autocompletion, jump to
-definition, and inline errors.
+请访问 `rust-analyzer` 项目 [home page][rust-analyzer] 查看安全说明，随后在咱们的特定 IDE 中安装语言服务器支持。咱们的 IDE 将获得自动补全、跳转到定义以及内联报错等能力。 <!-- ignore -->
 
 [rustfmt]: https://github.com/rust-lang/rustfmt
 [editions]: appendix-05-editions.md

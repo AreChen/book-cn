@@ -1,30 +1,19 @@
-# The Rust Programming Language
+# 《Rust 程序设计语言》
 
-_by Steve Klabnik, Carol Nichols, and Chris Krycho, with contributions from the
-Rust Community_
+_作者：Steve Klabnik、Carol Nichols 和 Chris Krycho，以及 Rust 社区的贡献者_
 
-This version of the text assumes you’re using Rust 1.97.0 (released 2026-07-09)
-or later with `edition = "2024"` in the *Cargo.toml* file of all projects to
-configure them to use Rust 2024 Edition idioms. See the [“Installation” section
-of Chapter 1][install]<!-- ignore --> for instructions on installing or
-updating Rust, and see [Appendix E][appendix-e]<!-- ignore --> for information
-on editions.
+本书假定你使用 Rust 1.97.0（发布于 2026-07-09）或更高版本，并在所有项目的 *Cargo.toml* 文件中使用 `edition = "2024"`，以启用 Rust 2024 Edition 的惯用写法。请参阅[第 1 章的“安装”部分][install]<!-- ignore -->，了解安装或更新 Rust 的方法；并参阅[附录 E][appendix-e]<!-- ignore -->，了解 Edition。
 
-The HTML format is available online at
-[https://doc.rust-lang.org/stable/book/](https://doc.rust-lang.org/stable/book/)
-and offline with installations of Rust made with `rustup`; run `rustup doc
---book` to open.
+HTML 版本可在线阅读，网址为[https://doc.rust-lang.org/stable/book/](https://doc.rust-lang.org/stable/book/)，也可以通过 `rustup` 安装的 Rust 离线阅读；运行 `rustup doc
+--book` 即可打开。
 
-Several community [translations] are also available.
+本书还提供了若干社区[译本][translations]。
 
-This text is available in [paperback and ebook format from No Starch
-Press][nsprust].
+本书还提供 [No Starch Press 出版的平装书和电子书][nsprust]。
 
 [install]: ch01-01-installation.html
 [appendix-e]: appendix-05-editions.html
 [nsprust]: https://nostarch.com/rust-programming-language-3rd-edition
 [translations]: appendix-06-translation.html
 
-> **🚨 Want a more interactive learning experience? Try out a different version
-> of the Rust Book, featuring: quizzes, highlighting, visualizations, and
-> more**: <https://rust-book.cs.brown.edu>
+> **🚨 想要更具互动性的学习体验？可以试试另一个版本的 Rust Book，它提供测验、高亮、可视化等功能：** <https://rust-book.cs.brown.edu>

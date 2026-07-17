@@ -2,51 +2,23 @@
 
 <a id="managing-growing-projects-with-packages-crates-and-modules"></a>
 
-# Packages, Crates, and Modules
+# 包、代码箱与模块
 
-As you write large programs, organizing your code will become increasingly
-important. By grouping related functionality and separating code with distinct
-features, you’ll clarify where to find code that implements a particular
-feature and where to go to change how a feature works.
+随着程序变得越来越庞大，组织代码会变得越来越重要。将相关功能归为一组，并把具有不同功能的代码分开，可以让你清楚地知道在哪里寻找某项功能的实现，以及应该在哪里修改某项功能的行为。
 
-The programs we’ve written so far have been in one module in one file. As a
-project grows, you should organize code by splitting it into multiple modules
-and then multiple files. A package can contain multiple binary crates and
-optionally one library crate. As a package grows, you can extract parts into
-separate crates that become external dependencies. This chapter covers all
-these techniques. For very large projects comprising a set of interrelated
-packages that evolve together, Cargo provides workspaces, which we’ll cover in
-[“Cargo Workspaces”][workspaces]<!-- ignore --> in Chapter 14.
+到目前为止，我们编写的程序都位于一个文件中的一个模块里。随着项目增长，你应当将代码拆分成多个模块，再拆分到多个文件中。一个包可以包含多个二进制代码箱，也可以选择包含一个库代码箱。随着包继续增长，你可以将其中的部分提取到独立的代码箱中，使其成为外部依赖。本章将介绍所有这些技术。对于由一组相互关联、共同演进的包组成的大型项目，Cargo 提供了工作空间；我们将在第 14 章的[“Cargo 工作空间”][workspaces]<!-- ignore -->一节中介绍它。
 
-We’ll also discuss encapsulating implementation details, which lets you reuse
-code at a higher level: Once you’ve implemented an operation, other code can
-call your code via its public interface without having to know how the
-implementation works. The way you write code defines which parts are public for
-other code to use and which parts are private implementation details that you
-reserve the right to change. This is another way to limit the amount of detail
-you have to keep in your head.
+我们还会讨论如何封装实现细节，从而让你能够在更高层次复用代码：实现某项操作后，其他代码可以通过你的公共接口调用它，而不必了解实现的工作方式。代码的编写方式决定了哪些部分是公开的、可供其他代码使用，哪些部分是私有的实现细节，并保留了随时修改这些细节的权利。这也是减少需要记在脑中的细节数量的一种方式。
 
-A related concept is scope: The nested context in which code is written has a
-set of names that are defined as “in scope.” When reading, writing, and
-compiling code, programmers and compilers need to know whether a particular
-name at a particular spot refers to a variable, function, struct, enum, module,
-constant, or other item and what that item means. You can create scopes and
-change which names are in or out of scope. You can’t have two items with the
-same name in the same scope; tools are available to resolve name conflicts.
+另一个相关概念是作用域：编写代码时所处的嵌套上下文包含一组被定义为“在作用域内”的名称。在阅读、编写和编译代码时，程序员和编译器都需要知道某个位置的特定名称指的是变量、函数、结构体、枚举、模块、常量还是其他项，以及该项代表什么。你可以创建作用域，也可以改变哪些名称处于作用域内或作用域外。同一作用域中不能有两个同名的项；你可以使用各种工具解决名称冲突。
 
-Rust has a number of features that allow you to manage your code’s
-organization, including which details are exposed, which details are private,
-and what names are in each scope in your programs. These features, sometimes
-collectively referred to as the _module system_, include:
+Rust 提供了许多功能来管理代码的组织方式，包括公开哪些细节、隐藏哪些细节，以及程序中每个作用域内有哪些名称。这些功能有时统称为_模块系统_，包括：
 
-* **Packages**: A Cargo feature that lets you build, test, and share crates
-* **Crates**: A tree of modules that produces a library or executable
-* **Modules and use**: Let you control the organization, scope, and privacy of
-paths
-* **Paths**: A way of naming an item, such as a struct, function, or module
+* **包**：Cargo 提供的一项功能，让你能够构建、测试和共享代码箱
+* **代码箱**：由模块组成的树，可以生成库或可执行文件
+* **模块与 use**：让你能够控制路径的组织方式、作用域和可见性
+* **路径**：为项命名的一种方式，例如结构体、函数或模块
 
-In this chapter, we’ll cover all these features, discuss how they interact, and
-explain how to use them to manage scope. By the end, you should have a solid
-understanding of the module system and be able to work with scopes like a pro!
+本章将介绍所有这些功能，讨论它们如何相互作用，并解释如何使用它们管理作用域。读完本章后，你应当能够扎实地理解模块系统，并像专业人士一样使用作用域！
 
 [workspaces]: ch14-03-cargo-workspaces.html

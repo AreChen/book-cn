@@ -59,6 +59,21 @@ jobs:
       working-directory: packages/mdbook-trpl
       run: |
         cargo test
+  translation:
+    name: Check Chinese translation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch official upstream
+      run: |
+        git remote add upstream https://github.com/rust-lang/book.git
+        git fetch --no-tags --depth=1 upstream main
+    - name: Test translation checker
+      run: python3 ci/test_check_translation.py
+    - name: Validate translated source
+      run: python3 ci/check_translation.py --upstream-ref FETCH_HEAD --require-chinese
+    - name: Check whitespace
+      run: git diff --check
   lint:
     name: Run lints
     runs-on: ubuntu-latest

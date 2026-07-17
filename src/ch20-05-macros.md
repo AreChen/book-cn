@@ -1,85 +1,43 @@
-## Macros
+## 宏，macro
 
-We’ve used macros like `println!` throughout this book, but we haven’t fully
-explored what a macro is and how it works. The term _macro_ refers to a family
-of features in Rust—declarative macros with `macro_rules!` and three kinds of
-procedural macros:
+在这本书中，我们一直使用像 `println!` 这样的宏，但尚未全面探讨什么是宏，以及他的工作原理。 *宏，macro* 这个术语，指的是 Rust 中的一类特性 -- 通过 `macro_rules!` 的 *声明式宏，declarative macro*，以及如下三种 *程序式宏，procedural macro*：
 
-- Custom `#[derive]` macros that specify code added with the `derive` attribute
-  used on structs and enums
-- Attribute-like macros that define custom attributes usable on any item
-- Function-like macros that look like function calls but operate on the tokens
-  specified as their argument
+- 自定义的 `#[derive]` 宏，他们通过 `derive` 属性，对结构体和枚举指定添加的代码（译注：这类似于 Python 中的 @ 装饰语法）；
+- 类属性的宏，定义可用于任何项目的自定义属性；
+- 类函数的宏，看起来像函数调用，但对指定为其参数的标记（程序项目）执行操作。
 
-We’ll talk about each of these in turn, but first, let’s look at why we even
-need macros when we already have functions.
+我们将依次讨论其中的每一种，但首先，我们来看看既然有了函数，为什么我们还需要宏。
 
-### The Difference Between Macros and Functions
+### 宏与函数的区别
 
-Fundamentally, macros are a way of writing code that writes other code, which
-is known as _metaprogramming_. In Appendix C, we discuss the `derive`
-attribute, which generates an implementation of various traits for you. We’ve
-also used the `println!` and `vec!` macros throughout the book. All of these
-macros _expand_ to produce more code than the code you’ve written manually.
+从根本上说，宏属于一种编写生成其他代码的代码的方式，这被称为 *元编程，metaprogramming*。在 [附录 C] 中，我们会讨论 `derive` 属性，其会为咱们生成各种特质的实现。在这本书的各处，我们也已使用了 `println!` 与 `vec!` 两个宏。所有这些宏都会 *展开，expand*，从而生成比咱们手写的代码更多的代码。
 
-Metaprogramming is useful for reducing the amount of code you have to write and
-maintain, which is also one of the roles of functions. However, macros have
-some additional powers that functions don’t have.
+元编程对于减少咱们必须编写和维护代码量很有用，这也是函数的作用之一。但是，宏有着函数不具备的一些额外能力。
 
-A function signature must declare the number and type of parameters the
-function has. Macros, on the other hand, can take a variable number of
-parameters: We can call `println!("hello")` with one argument or
-`println!("hello {}", name)` with two arguments. Also, macros are expanded
-before the compiler interprets the meaning of the code, so a macro can, for
-example, implement a trait on a given type. A function can’t, because it gets
-called at runtime and a trait needs to be implemented at compile time.
+函数签名必须声明函数具有的参数个数和类型。另一方面，宏可以取可变数量的参数：我们可以以一个参数调用 `println!("hello")`，也可以以两个参数调用 `println!("hello {}", name)`。此外，宏会在编译器解析代码含义之前得以展开，因此宏就可以，比如对给定类型实现特质。函数则无法做到这点，因为函数是在运行时被调用的，而特质需要在编译时实现。
 
-The downside to implementing a macro instead of a function is that macro
-definitions are more complex than function definitions because you’re writing
-Rust code that writes Rust code. Due to this indirection, macro definitions are
-generally more difficult to read, understand, and maintain than function
-definitions.
+实现宏而非函数的缺点在于，宏的定义比函数的定义更为复杂，因为咱们要编写生成 Rust 代码的 Rust 代码。由于这种间接性，宏的定义通常比函数的定义更难阅读、理解和维护。
 
-Another important difference between macros and functions is that you must
-define macros or bring them into scope _before_ you call them in a file, as
-opposed to functions you can define anywhere and call anywhere.
+宏与函数之间的另一重要区别在于，在文件中调用宏 *之前*，咱们必须先定义宏或带入他们到作用域，这与咱们可以在任何地方定义和调用任何地方的函数相反。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="declarative-macros-with-macro_rules-for-general-metaprogramming"></a>
 
-### Declarative Macros for General Metaprogramming
+### 用于通用元编程的声明式宏
 
-The most widely used form of macros in Rust is the _declarative macro_. These
-are also sometimes referred to as “macros by example,” “`macro_rules!` macros,”
-or just plain “macros.” At their core, declarative macros allow you to write
-something similar to a Rust `match` expression. As discussed in Chapter 6,
-`match` expressions are control structures that take an expression, compare the
-resultant value of the expression to patterns, and then run the code associated
-with the matching pattern. Macros also compare a value to patterns that are
-associated with particular code: In this situation, the value is the literal
-Rust source code passed to the macro; the patterns are compared with the
-structure of that source code; and the code associated with each pattern, when
-matched, replaces the code passed to the macro. This all happens during
-compilation.
-
-To define a macro, you use the `macro_rules!` construct. Let’s explore how to
-use `macro_rules!` by looking at how the `vec!` macro is defined. Chapter 8
-covered how we can use the `vec!` macro to create a new vector with particular
-values. For example, the following macro creates a new vector containing three
-integers:
+Rust 中使用最广泛的宏形式属于 **声明式宏，declarative macro**。这些宏有时也被称为 `macro_rules!` `match` `match`
+为了定义宏，咱们要使用 `macro_rules!` 结构体。我们通过分析 `macro_rules!` 宏的定义方式，来了解怎样使用 `vec!`。第 8 章介绍了怎样使用 `vec!` 宏创建带有特定值的新矢量值。例如，以下宏会创建一个包含三个整数的新矢量值：
 
 ```rust
 let v: Vec<u32> = vec![1, 2, 3];
 ```
 
-We could also use the `vec!` macro to make a vector of two integers or a vector
-of five string slices. We wouldn’t be able to use a function to do the same
-because we wouldn’t know the number or type of values up front.
+我们也可以使用 `vec!` 宏构造一个包含两个整数的矢量值，或者一个包含五个字符串切片的矢量值。我们无法使用函数来执行同样的操作，因为我们事先不知道值的数量或类型。
 
-Listing 20-35 shows a slightly simplified definition of the `vec!` macro.
+下面清单 20-35 展示了 `vec!` 宏的略微简化的定义。
 
-<Listing number="20-35" file-name="src/lib.rs" caption="A simplified version of the `vec!` macro definition">
+<Listing number="20-35" file-name="src/lib.rs" caption="`vec!` 宏定义的简化版本">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-35/src/lib.rs}}
@@ -87,54 +45,22 @@ Listing 20-35 shows a slightly simplified definition of the `vec!` macro.
 
 </Listing>
 
-> Note: The actual definition of the `vec!` macro in the standard library
-> includes code to pre-allocate the correct amount of memory up front. That code
-> is an optimization that we don’t include here, to make the example simpler.
+> **注意**：标准库中 `vec!` 宏的实际定义，包含了预先分配正确数量内存的代码。该代码属于一种优化，为了使示例更简单，我们没有包含该代码。
 
-The `#[macro_export]` annotation indicates that this macro should be made
-available whenever the crate in which the macro is defined is brought into
-scope. Without this annotation, the macro can’t be brought into scope.
+其中 `#[macro_export]` 注解表明，只要定义该宏的代码箱被带入作用域，那么这个宏就应可用。若没有这个注解，该宏就无法被带入作用域。
 
-We then start the macro definition with `macro_rules!` and the name of the
-macro we’re defining _without_ the exclamation mark. The name, in this case
-`vec`, is followed by curly brackets denoting the body of the macro definition.
+然后我们以 `macro_rules!` 以及 *不带* 感叹号的我们正在定义的宏的名字，来开始宏的定义。在这一情形下名字即为 `vec`，后跟表示宏定义主体的花括号。
 
-The structure in the `vec!` body is similar to the structure of a `match`
-expression. Here we have one arm with the pattern `( $( $x:expr ),* )`,
-followed by `=>` and the block of code associated with this pattern. If the
-pattern matches, the associated block of code will be emitted. Given that this
-is the only pattern in this macro, there is only one valid way to match; any
-other pattern will result in an error. More complex macros will have more than
-one arm.
+其中 `vec!` 注解表明，只要定义该宏的代码箱被带入作用域，那么这个宏就应可用。若没有这个注解，该宏就无法被带入作用域。 `match` `( $( $x:expr ),* )` `=>`
+当模式匹配时，关联代码块将得以生成。鉴于这是这个宏中唯一的模式，因此只有一种有效的匹配方式；任何其他模式都将导致报错。更复杂的宏将有着多个支臂。
 
-Valid pattern syntax in macro definitions is different from the pattern syntax
-covered in Chapter 19 because macro patterns are matched against Rust code
-structure rather than values. Let’s walk through what the pattern pieces in
-Listing 20-29 mean; for the full macro pattern syntax, see the [Rust
-Reference][ref].
+首选，我们使用一对圆括号来环绕整个模式。我们使用美元符号（`$`）声明宏系统中的一个变量，该变量将包含匹配模式的 Rust 代码。美元符号清楚地表明这是个宏变量，而非普通 Rust 变量。接下来的一对圆括号，捕获匹配其内模式的值，供替换代码中使用。在 `$()` 内的是 `$x:expr`，这会匹配任意 Rust 表达式，并给予表达式名字 `$x`。
 
-First, we use a set of parentheses to encompass the whole pattern. We use a
-dollar sign (`$`) to declare a variable in the macro system that will contain
-the Rust code matching the pattern. The dollar sign makes it clear this is a
-macro variable as opposed to a regular Rust variable. Next comes a set of
-parentheses that captures values that match the pattern within the parentheses
-for use in the replacement code. Within `$()` is `$x:expr`, which matches any
-Rust expression and gives the expression the name `$x`.
+`$()` 后的逗号表示，在匹配 `$()` 中代码的每个代码实例之间必须出现一个字面上的逗号分隔符。随后的 `*` 指定该模式会匹配 `*` 之前的内容零次或多次（译注：这一点与正则表达式类似）。
 
-The comma following `$()` indicates that a literal comma separator character
-must appear between each instance of the code that matches the code in `$()`.
-The `*` specifies that the pattern matches zero or more of whatever precedes
-the `*`.
+当我们通过 `vec![1, 2, 3];` 调用这个宏时，`$x` 模式会与三个表达式 `1`、`2` 和 `3` 匹配三次。
 
-When we call this macro with `vec![1, 2, 3];`, the `$x` pattern matches three
-times with the three expressions `1`, `2`, and `3`.
-
-Now let’s look at the pattern in the body of the code associated with this arm:
-`temp_vec.push()` within `$()*` is generated for each part that matches `$()`
-in the pattern zero or more times depending on how many times the pattern
-matches. The `$x` is replaced with each expression matched. When we call this
-macro with `vec![1, 2, 3];`, the code generated that replaces this macro call
-will be the following:
+现在我们来看看与这个支臂关联的代码主体中的模式：`temp_vec.push()` 内的 `$()*` 会针对匹配模式中的 `$()` 每个部分，而生成零次或多次，具体取决于该模式匹配的次数。其中 `$x` 以每个匹配的表达式替换。当我们以 `vec![1, 2, 3];` 调用这个宏时，生成的替换这次宏调用的代码将如下：
 
 ```rust,ignore
 {
@@ -146,29 +72,19 @@ will be the following:
 }
 ```
 
-We’ve defined a macro that can take any number of arguments of any type and can
-generate code to create a vector containing the specified elements.
+我们定义了一个宏，他可以取任意数量、任意类型的参数，并且可以生成代码来创建一个包含指定元素的矢量。
 
-To learn more about how to write macros, consult the online documentation or
-other resources, such as [“The Little Book of Rust Macros”][tlborm] started by
-Daniel Keep and continued by Lukas Wirth.
+要了解有关如何编写宏的更多信息，请查阅在线文档或其他资源，比如由 Daniel Keep 撰写，Lukas Wirth 接续编写的 [The Little Book of Rust Macros]。
 
-### Procedural Macros for Generating Code from Attributes
+### 用于根据属性生成代码的过程宏
 
-The second form of macros is the procedural macro, which acts more like a
-function (and is a type of procedure). _Procedural macros_ accept some code as
-an input, operate on that code, and produce some code as an output rather than
-matching against patterns and replacing the code with other code as declarative
-macros do. The three kinds of procedural macros are custom `derive`,
-attribute-like, and function-like, and all work in a similar fashion.
+- 自定义的 `derive` 宏、
+- 类属性宏，attribute-like macros、
+- 及类函数宏，function-like macros。
 
-When creating procedural macros, the definitions must reside in their own crate
-with a special crate type. This is for complex technical reasons that we hope
-to eliminate in the future. In Listing 20-36, we show how to define a
-procedural macro, where `some_attribute` is a placeholder for using a specific
-macro variety.
+在创建过程宏时，其定义必须位于一个有着特殊代码箱类型的他们自己的代码箱中。这是出于一些复杂的技术原因，我们（Rust 开发团队）希望今后能消除这些原因。在下面清单 20-36 中，我们展示了怎样定义一个过程宏，其中 `some_attribute` 是使用特定宏变种的占位符。
 
-<Listing number="20-36" file-name="src/lib.rs" caption="An example of defining a procedural macro">
+<Listing number="20-36" file-name="src/lib.rs" caption="定义过程宏的示例">
 
 ```rust,ignore
 use proc_macro::TokenStream;
@@ -180,36 +96,20 @@ pub fn some_name(input: TokenStream) -> TokenStream {
 
 </Listing>
 
-The function that defines a procedural macro takes a `TokenStream` as an input
-and produces a `TokenStream` as an output. The `TokenStream` type is defined by
-the `proc_macro` crate that is included with Rust and represents a sequence of
-tokens. This is the core of the macro: The source code that the macro is
-operating on makes up the input `TokenStream`, and the code the macro produces
-is the output `TokenStream`. The function also has an attribute attached to it
-that specifies which kind of procedural macro we’re creating. We can have
-multiple kinds of procedural macros in the same crate.
+定义过程宏的函数，会取一个 `TokenStream` 值作为输入，并生成一个 `TokenStream` 作为输出。`TokenStream` 类型由 Rust 附带的 `proc_macro` 代码箱定义，表示令牌序列，a sequence of tokens。这是这种宏的核心：宏所操作的源代码构成输入的 `TokenStream`，而宏生成的代码则是输出的 `TokenStream`。该函数附带了一个属性，指定我们正在创建何种类别的过程宏。我们可以在同一个代码箱中包含多种类别的过程宏。
 
-Let’s look at the different kinds of procedural macros. We’ll start with a
-custom `derive` macro and then explain the small dissimilarities that make the
-other forms different.
+我们来看看不同类别的过程宏。我们将从自定义 `derive` 宏开始，然后探讨使其他形式有所不同的细微差异。
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="how-to-write-a-custom-derive-macro"></a>
 
-### Custom `derive` Macros
+### 自定义 `derive` 宏
 
-Let’s create a crate named `hello_macro` that defines a trait named
-`HelloMacro` with one associated function named `hello_macro`. Rather than
-making our users implement the `HelloMacro` trait for each of their types,
-we’ll provide a procedural macro so that users can annotate their type with
-`#[derive(HelloMacro)]` to get a default implementation of the `hello_macro`
-function. The default implementation will print `Hello, Macro! My name is
-TypeName!` where `TypeName` is the name of the type on which this trait has
-been defined. In other words, we’ll write a crate that enables another
-programmer to write code like Listing 20-37 using our crate.
+我们来创建一个名为 `hello_macro` 的代码箱，他通过一个名为 `HelloMacro` 的关联函数，定义了个名为 `hello_macro` 的特质。与其让用户为他们的每个类型都实现 `HelloMacro` 特质，我们提供一个过程宏，以便用户可以通过 `#[derive(HelloMacro)]` 来注解他们的类型，以获得 `hello_macro` 函数的默认实现。默认实现将打印 `Hello, Macro! My name is
+TypeName!`，其中的 `TypeName` 是该特质被定义所在的类型的名字。换句话说，我们将编写一个代码箱，使其他程序员能够编写如下清单 20-37 中的代码。
 
-<Listing number="20-37" file-name="src/main.rs" caption="The code a user of our crate will be able to write when using our procedural macro">
+<Listing number="20-37" file-name="src/main.rs" caption="我们的代码箱用户在使用我们的过程宏时，将能够编写的代码">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-37/src/main.rs}}
@@ -217,17 +117,15 @@ programmer to write code like Listing 20-37 using our crate.
 
 </Listing>
 
-This code will print `Hello, Macro! My name is Pancakes!` when we’re done. The
-first step is to make a new library crate, like this:
+当我们完成时，这段代码将打印 `Hello, Macro! My name is Pancakes!`。第一步是构造一个新的库代码箱，如下所示：
 
 ```console
 $ cargo new hello_macro --lib
 ```
 
-Next, in Listing 20-38, we’ll define the `HelloMacro` trait and its associated
-function.
+接下来，在清单 20-38 中，我们将定义 `HelloMacro` 特质及其关联函数。
 
-<Listing file-name="src/lib.rs" number="20-38" caption="A simple trait that we will use with the `derive` macro">
+<Listing file-name="src/lib.rs" number="20-38" caption="一个我们将与 `derive` 宏一起使用的简单特质">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-38/hello_macro/src/lib.rs}}
@@ -235,10 +133,9 @@ function.
 
 </Listing>
 
-We have a trait and its function. At this point, our crate user could implement
-the trait to achieve the desired functionality, as in Listing 20-39.
+我们有一个特质及其函数。此时，我们的代码箱用户可以实现这个特质，以实现所需的功能，如下清单 20-39 中所示。
 
-<Listing number="20-39" file-name="src/main.rs" caption="How it would look if users wrote a manual implementation of the `HelloMacro` trait">
+<Listing number="20-39" file-name="src/main.rs" caption="当用户编写 `HelloMacro` 特质的手动实现时，会是什么样子">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-39/pancakes/src/main.rs}}
@@ -246,41 +143,19 @@ the trait to achieve the desired functionality, as in Listing 20-39.
 
 </Listing>
 
-However, they would need to write the implementation block for each type they
-wanted to use with `hello_macro`; we want to spare them from having to do this
-work.
+然而，他们需要针对他们打算与 `hello_macro` 一起使用的每种类型，都编写实现代码块；我们希望省去他们这部分工作。
 
-Additionally, we can’t yet provide the `hello_macro` function with default
-implementation that will print the name of the type the trait is implemented
-on: Rust doesn’t have reflection capabilities, so it can’t look up the type’s
-name at runtime. We need a macro to generate code at compile time.
+此外，我们还无法为 `hello_macro` 函数提供将打印对其实现该特质的类型的名字的默认实现：Rust 不具备反射能力，因此无法在运行时查找类型的名字。我们需要一个宏在编译时生成代码。
 
-The next step is to define the procedural macro. At the time of this writing,
-procedural macros need to be in their own crate. Eventually, this restriction
-might be lifted. The convention for structuring crates and macro crates is as
-follows: For a crate named `foo`, a custom `derive` procedural macro crate is
-called `foo_derive`. Let’s start a new crate called `hello_macro_derive` inside
-our `hello_macro` project:
+下一步是定义过程宏。在撰写本文时，过程宏需要位于自己的代码箱中。最终，这一限制可能会被取消。组织代码箱和组织宏代码箱方面的约定如下：对于名为 `foo` 的代码箱，则自定义的 `derive` 过程宏代码箱应名为 `foo_derive`。我们来在 `hello_macro_derive` 项目内，启动一个名为 `hello_macro` 的新代码箱：
 
 ```console
 $ cargo new hello_macro_derive --lib
 ```
 
-Our two crates are tightly related, so we create the procedural macro crate
-within the directory of our `hello_macro` crate. If we change the trait
-definition in `hello_macro`, we’ll have to change the implementation of the
-procedural macro in `hello_macro_derive` as well. The two crates will need to
-be published separately, and programmers using these crates will need to add
-both as dependencies and bring them both into scope. We could instead have the
-`hello_macro` crate use `hello_macro_derive` as a dependency and re-export the
-procedural macro code. However, the way we’ve structured the project makes it
-possible for programmers to use `hello_macro` even if they don’t want the
-`derive` functionality.
+这两个代码箱紧密相关，因此我们在 `hello_macro` 代码箱目录下创建这个过程宏代码箱。当我们修改 `hello_macro` 中的特质定义时，也必须修改 `hello_macro_derive` 中的过程宏。这两个代码箱需要单独发布，而使用这两个代码箱的程序员则需要添加他们为依赖项，并带入他们到作用域。我们也可以让 `hello_macro` 代码箱作为依赖项使用 `hello_macro_derive`，并重新导出过程宏的代码。然而，我们组织项目的方式，让程序员即使不想要 `hello_macro` 的功能，也可以使用 `derive`。
 
-We need to declare the `hello_macro_derive` crate as a procedural macro crate.
-We’ll also need functionality from the `syn` and `quote` crates, as you’ll see
-in a moment, so we need to add them as dependencies. Add the following to the
-_Cargo.toml_ file for `hello_macro_derive`:
+我们需要声明 `hello_macro_derive` 代码箱为一个过程宏的代码箱。稍后咱们就会看到，我们还需要 `syn` 和 `quote` 代码箱中的功能，因此我们需要添加他们为依赖。请添加以下内容到 `hello_macro_derive` 的 Cargo.toml 文件：
 
 <Listing file-name="hello_macro_derive/Cargo.toml">
 
@@ -290,11 +165,9 @@ _Cargo.toml_ file for `hello_macro_derive`:
 
 </Listing>
 
-To start defining the procedural macro, place the code in Listing 20-40 into
-your _src/lib.rs_ file for the `hello_macro_derive` crate. Note that this code
-won’t compile until we add a definition for the `impl_hello_macro` function.
+这样做让编写过程宏更加方便。外层函数（这一情形下的 `hello_macro_derive` ）中的这种代码，对于咱们所见或创建的几乎所有过程宏代码箱，都将是相同的。而咱们在内层函数（这一情形下的 `impl_hello_macro`）的主体指定的代码，将根据过程宏的用途而有所不同。
 
-<Listing number="20-40" file-name="hello_macro_derive/src/lib.rs" caption="Code that most procedural macro crates will require in order to process Rust code">
+<Listing number="20-40" file-name="hello_macro_derive/src/lib.rs" caption="大多数过程宏代码箱为了处理 Rust 代码都需要的代码">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-40/hello_macro/hello_macro_derive/src/lib.rs}}
@@ -302,41 +175,19 @@ won’t compile until we add a definition for the `impl_hello_macro` function.
 
 </Listing>
 
-Notice that we’ve split the code into the `hello_macro_derive` function, which
-is responsible for parsing the `TokenStream`, and the `impl_hello_macro`
-function, which is responsible for transforming the syntax tree: This makes
-writing a procedural macro more convenient. The code in the outer function
-(`hello_macro_derive` in this case) will be the same for almost every
-procedural macro crate you see or create. The code you specify in the body of
-the inner function (`impl_hello_macro` in this case) will be different
-depending on your procedural macro’s purpose.
+当我们的库用于在某种类型上指定 `hello_macro_derive` 时，`TokenStream` 函数就会被调用。这样做之所以可行，是因为我们在这里以 `impl_hello_macro` 注解了 `hello_macro_derive` 函数，并指定了名字 `impl_hello_macro`，其与我们的特质名字匹配；这是大多数过程宏遵循的约定。
 
-We’ve introduced three new crates: `proc_macro`, [`syn`][syn]<!-- ignore -->,
-and [`quote`][quote]<!-- ignore -->. The `proc_macro` crate comes with Rust,
-so we didn’t need to add that to the dependencies in _Cargo.toml_. The
-`proc_macro` crate is the compiler’s API that allows us to read and manipulate
-Rust code from our code.
+我们引入了三个新的代码箱：`proc_macro`、[`syn`][syn]<!-- ignore --> 和
+[`quote`][quote]<!-- ignore -->。`proc_macro` 代码箱随 Rust 一起提供，因此不需要
+将它添加到 _Cargo.toml_ 的依赖中。`proc_macro` 代码箱是编译器提供的 API，允许我们
+从自己的代码读取和操作 Rust 代码。
+`syn` 函数首选会将 input 从 TokenStream 转换为一种数据结构，我们随后对其解析并执行操作。这是 `quote` 发挥作用的地方。`syn` 中的 parse 函数会取一个 TokenStream 并返回一个 DeriveInput 结构体，解析后的 Rust 代码。下面清单 20-41 展示了我们从解析 struct Pancakes; 字符串，得到的 DeriveInput 结构体的相关部分。
 
-The `syn` crate parses Rust code from a string into a data structure that we
-can perform operations on. The `quote` crate turns `syn` data structures back
-into Rust code. These crates make it much simpler to parse any sort of Rust
-code we might want to handle: Writing a full parser for Rust code is no simple
-task.
+咱们可能已经注意到，我们调用了 `hello_macro_derive`，以在这里的 `#[derive(HelloMacro)]` 函数调用失败时，引起 `hello_macro_derive` 函数终止运行。我们的过程宏有必要在出现错误时终止运行，因为 `proc_macro_derive` 函数必须返回 `HelloMacro` 而不是 Result，以符合过程宏 API。我们通过使用 unwrap 简化了这个示例；在生产代码中，咱们应该通过使用 panic! 或 expect，提供有关出错原因的更具体的错误消息。
 
-The `hello_macro_derive` function will be called when a user of our library
-specifies `#[derive(HelloMacro)]` on a type. This is possible because we’ve
-annotated the `hello_macro_derive` function here with `proc_macro_derive` and
-specified the name `HelloMacro`, which matches our trait name; this is the
-convention most procedural macros follow.
+这样做让编写过程宏更加方便。外层函数（这一情形下的 `hello_macro_derive` ）中的这种代码，对于咱们所见或创建的几乎所有过程宏代码箱，都将是相同的。而咱们在内层函数（这一情形下的 `input`）的主体指定的代码，将根据过程宏的用途而有所不同。 `TokenStream` `syn` `parse` `syn` `TokenStream` `DeriveInput` `DeriveInput` `struct Pancakes;`
 
-The `hello_macro_derive` function first converts the `input` from a
-`TokenStream` to a data structure that we can then interpret and perform
-operations on. This is where `syn` comes into play. The `parse` function in
-`syn` takes a `TokenStream` and returns a `DeriveInput` struct representing the
-parsed Rust code. Listing 20-41 shows the relevant parts of the `DeriveInput`
-struct we get from parsing the `struct Pancakes;` string.
-
-<Listing number="20-41" caption="The `DeriveInput` instance we get when parsing the code that has the macro’s attribute in Listing 20-37">
+<Listing number="20-41" caption="我们在解析有着清单 20-37 中宏属性的代码时，得到的 `DeriveInput` 实例">
 
 ```rust,ignore
 DeriveInput {
@@ -360,31 +211,14 @@ DeriveInput {
 
 </Listing>
 
-The fields of this struct show that the Rust code we’ve parsed is a unit struct
-with the `ident` (_identifier_, meaning the name) of `Pancakes`. There are more
-fields on this struct for describing all sorts of Rust code; check the [`syn`
-documentation for `DeriveInput`][syn-docs] for more information.
+我们使用 `ident` 得到一个 `Pancakes` 结构体实例，包含被注解类型的名字（标识符）。清单 20-41 中的结构体表明，当我们对清单 20-37 中的代码运行 `syn` 函数时，我们得到的 `DeriveInput` 就将有着值为 "Pancakes" 的 ident 字段。因此，清单 20-42 中的 name 变量将包含一个 Ident 结构体实例，其在打印出时将是字符串 "Pancakes"，即清单 20-37 中结构体的名字。
 
-Soon we’ll define the `impl_hello_macro` function, which is where we’ll build
-the new Rust code we want to include. But before we do, note that the output
-for our `derive` macro is also a `TokenStream`. The returned `TokenStream` is
-added to the code that our crate users write, so when they compile their crate,
-they’ll get the extra functionality that we provide in the modified
-`TokenStream`.
+其中 `impl_hello_macro` 宏让我们可以定义打算返回的 Rust 代码。编译器期望的类型与 `derive` 宏执行的直接结果不同，因此我们需要将其转换为 `TokenStream`。我们通过调用 `TokenStream` 方法完成这一操作，其会消费中间表示形式，并返回所需的 `TokenStream` 类型的值。
 
-You might have noticed that we’re calling `unwrap` to cause the
-`hello_macro_derive` function to panic if the call to the `syn::parse` function
-fails here. It’s necessary for our procedural macro to panic on errors because
-`proc_macro_derive` functions must return `TokenStream` rather than `Result` to
-conform to the procedural macro API. We’ve simplified this example by using
-`unwrap`; in production code, you should provide more specific error messages
-about what went wrong by using `panic!` or `expect`.
+`unwrap` 代码箱是 Rust 默认自带的，因此我们无需添加他到 `hello_macro_derive` 中的依赖项。`syn::parse` 代码箱属于编译器的 API，允许我们在代码中读取和操作 Rust 代码。 `proc_macro_derive` `TokenStream` `Result` `unwrap` `panic!` `expect`
+类函数的宏定义了看起来像函数调用的宏。与 `TokenStream` 宏类似，他们比函数更为灵活；例如，他们可以取未知数量的参数。然而，`DeriveInput` 的宏只能使用我们在 [用于通用元编程的声明式宏] 小节中讨论过的类似匹配的语法来定义。而类函数的宏会取一个 `HelloMacro` 参数，并且他们的定义会像其他两种过程宏一样，使用 Rust 代码来操作该 TokenStream。类函数宏的一个示例为 sql! 宏，其可以被如下调用：
 
-Now that we have the code to turn the annotated Rust code from a `TokenStream`
-into a `DeriveInput` instance, let’s generate the code that implements the
-`HelloMacro` trait on the annotated type, as shown in Listing 20-42.
-
-<Listing number="20-42" file-name="hello_macro_derive/src/lib.rs" caption="Implementing the `HelloMacro` trait using the parsed Rust code">
+<Listing number="20-42" file-name="hello_macro_derive/src/lib.rs" caption="使用解析后的 Rust 代码实现 `HelloMacro` 特质">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/listing-20-42/hello_macro/hello_macro_derive/src/lib.rs:here}}
@@ -392,134 +226,54 @@ into a `DeriveInput` instance, let’s generate the code that implements the
 
 </Listing>
 
-We get an `Ident` struct instance containing the name (identifier) of the
-annotated type using `ast.ident`. The struct in Listing 20-41 shows that when
-we run the `impl_hello_macro` function on the code in Listing 20-37, the
-`ident` we get will have the `ident` field with a value of `"Pancakes"`. Thus,
-the `name` variable in Listing 20-42 will contain an `Ident` struct instance
-that, when printed, will be the string `"Pancakes"`, the name of the struct in
-Listing 20-37.
-
-The `quote!` macro lets us define the Rust code that we want to return. The
-compiler expects something different from the direct result of the `quote!`
-macro’s execution, so we need to convert it to a `TokenStream`. We do this by
-calling the `into` method, which consumes this intermediate representation and
-returns a value of the required `TokenStream` type.
-
-The `quote!` macro also provides some very cool templating mechanics: We can
-enter `#name`, and `quote!` will replace it with the value in the variable
-`name`. You can even do some repetition similar to the way regular macros work.
-Check out [the `quote` crate’s docs][quote-docs] for a thorough introduction.
-
-We want our procedural macro to generate an implementation of our `HelloMacro`
-trait for the type the user annotated, which we can get by using `#name`. The
-trait implementation has the one function `hello_macro`, whose body contains the
-functionality we want to provide: printing `Hello, Macro! My name is` and then
-the name of the annotated type.
-
-The `stringify!` macro used here is built into Rust. It takes a Rust
-expression, such as `1 + 2`, and at compile time turns the expression into a
-string literal, such as `"1 + 2"`. This is different from `format!` or
-`println!`, which are macros that evaluate the expression and then turn the
-result into a `String`. There is a possibility that the `#name` input might be
-an expression to print literally, so we use `stringify!`. Using `stringify!`
-also saves an allocation by converting `#name` to a string literal at compile
-time.
-
-At this point, `cargo build` should complete successfully in both `hello_macro`
-and `hello_macro_derive`. Let’s hook up these crates to the code in Listing
-20-37 to see the procedural macro in action! Create a new binary project in
-your _projects_ directory using `cargo new pancakes`. We need to add
-`hello_macro` and `hello_macro_derive` as dependencies in the `pancakes`
-crate’s _Cargo.toml_. If you’re publishing your versions of `hello_macro` and
-`hello_macro_derive` to [crates.io](https://crates.io/)<!-- ignore -->, they
-would be regular dependencies; if not, you can specify them as `path`
-dependencies as follows:
-
+当我们的库用于在某种类型上指定 `Ident` 时，`ast.ident` 函数就会被调用。这样做之所以可行，是因为我们在这里以 `impl_hello_macro` 注解了 `ident` 函数，并指定了名字 `ident`，其与我们的特质名字匹配；这是大多数过程宏遵循的约定。 `"Pancakes"` `name` `Ident` `"Pancakes"`
+`quote!` 函数首选会将 `quote!` 从 `TokenStream` 转换为一种数据结构，我们随后对其解析并执行操作。这是 `into` 发挥作用的地方。`TokenStream` 中的 parse 函数会取一个 TokenStream 并返回一个 DeriveInput 结构体，解析后的 Rust 代码。下面清单 20-41 展示了我们从解析 struct Pancakes; 字符串，得到的 DeriveInput 结构体的相关部分。
+`quote!` 宏还提供了非常灵活的模板机制：我们可以写入 `#name`，`quote!` 会将其替换为变量 `name` 中的值。你甚至可以像普通宏那样进行重复操作。若想深入了解，请参阅 [`quote` 箱的文档][quote-docs]。
+很快我们将定义 `HelloMacro` 函数，其中我们将构建想要包含的新 Rust 代码。但在我们开始之前，请注意 `#name` 宏的输出也是个 `hello_macro`。返回的 `Hello, Macro! My name is` 会被添加到我们的代码箱用户编写的代码中，因此当他们编译自己的代码箱时，他们将获得咱们在修改后的 TokenStream 中提供的额外功能。
+咱们可能已经注意到，我们调用了 `stringify!`，以在这里的 `1 + 2` 函数调用失败时，引起 `"1 + 2"` 函数终止运行。我们的过程宏有必要在出现错误时终止运行，因为 `format!` 函数必须返回 `println!` 而不是 `String`，以符合过程宏 API。我们通过使用 `#name` 简化了这个示例；在生产代码中，咱们应该通过使用 `stringify!` 或 `stringify!`，提供有关出错原因的更具体的错误消息。 `#name`
+现在我们有了将注解后的 Rust 代码从 `cargo build` 转换为 `hello_macro` 实例的代码，接下来让我们生成对注解的类型实现 `hello_macro_derive` 特质的代码，如下清单 20-42 中所示。 [crates.io](https://crates.io/) `cargo new pancakes` `hello_macro` `hello_macro_derive` `pancakes` `hello_macro` `hello_macro_derive` `path` <!-- ignore -->
 ```toml
 {{#include ../listings/ch20-advanced-features/no-listing-21-pancakes/pancakes/Cargo.toml:6:8}}
 ```
 
-Put the code in Listing 20-37 into _src/main.rs_, and run `cargo run`: It
-should print `Hello, Macro! My name is Pancakes!`. The implementation of the
-`HelloMacro` trait from the procedural macro was included without the
-`pancakes` crate needing to implement it; the `#[derive(HelloMacro)]` added the
-trait implementation.
+我们使用 `cargo run` 得到一个 `Hello, Macro! My name is Pancakes!` 结构体实例，包含被注解类型的名字（标识符）。清单 20-41 中的结构体表明，当我们对清单 20-37 中的代码运行 `HelloMacro` 函数时，我们得到的 `pancakes` 就将有着值为 `#[derive(HelloMacro)]` 的 ident 字段。因此，清单 20-42 中的 name 变量将包含一个 Ident 结构体实例，其在打印出时将是字符串 "Pancakes"，即清单 20-37 中结构体的名字。
+这一定义类似于自定义 `derive` 宏的签名：我们接收圆括号内的令牌，并返回我们希望生成的代码。
 
-Next, let’s explore how the other kinds of procedural macros differ from custom
-`derive` macros.
+### 类属性的宏
 
-### Attribute-Like Macros
-
-Attribute-like macros are similar to custom `derive` macros, but instead of
-generating code for the `derive` attribute, they allow you to create new
-attributes. They’re also more flexible: `derive` only works for structs and
-enums; attributes can be applied to other items as well, such as functions.
-Here’s an example of using an attribute-like macro. Say you have an attribute
-named `route` that annotates functions when using a web application framework:
-
+类属性的宏与自定义 `derive` 宏类似，但他们针对 `derive` 属性生成代码，他们允许咱们创建新的属性。他们还更加灵活：`derive` 适用于结构体和枚举；而属性还可以应用于其他项目，比如函数。下面是一个使用类属性宏的示例。假设咱们有个名为 `route` 的属性，会在使用某种 web 应用框架时注解函数：
 ```rust,ignore
 #[route(GET, "/")]
 fn index() {
 ```
 
-This `#[route]` attribute would be defined by the framework as a procedural
-macro. The signature of the macro definition function would look like this:
-
+这个 `#[route]` 属性将由框架定义为一个过程宏。该宏定义的函数的签名将看起来像下面这样：
 ```rust,ignore
 #[proc_macro_attribute]
 pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
 ```
 
-Here, we have two parameters of type `TokenStream`. The first is for the
-contents of the attribute: the `GET, "/"` part. The second is the body of the
-item the attribute is attached to: in this case, `fn index() {}` and the rest
-of the function’s body.
+这里，我们两个 `TokenStream` 类型的参数。第一个用于属性的内容：即 `GET, "/"` 部分。第二个则是该属性所附加的项目的主体：在这一情形下，即 `fn index() {}` 及函数主体的其余部分。
+除此之外，类属性的宏与自定义 `derive` 宏的工作原理相同：咱们要创建一个 `proc-macro` 代码箱类型的代码箱，并实现一个生成所需代码的函数！
+### 类函数的宏
 
-Other than that, attribute-like macros work the same way as custom `derive`
-macros: You create a crate with the `proc-macro` crate type and implement a
-function that generates the code you want!
-
-### Function-Like Macros
-
-Function-like macros define macros that look like function calls. Similarly to
-`macro_rules!` macros, they’re more flexible than functions; for example, they
-can take an unknown number of arguments. However, `macro_rules!` macros can
-only be defined using the match-like syntax we discussed in the [“Declarative
-Macros for General Metaprogramming”][decl]<!-- ignore --> section earlier.
-Function-like macros take a `TokenStream` parameter, and their definition
-manipulates that `TokenStream` using Rust code as the other two types of
-procedural macros do. An example of a function-like macro is an `sql!` macro
-that might be called like so:
-
+类函数的宏定义了看起来像函数调用的宏。与 `macro_rules!` 宏类似，他们比函数更为灵活；例如，他们可以取未知数量的参数。然而，`macro_rules!` 的宏只能使用我们在 [“Declarative
+Macros for General Metaprogramming”][decl] 小节中讨论过的类似匹配的语法来定义。而类函数的宏会取一个 `TokenStream` 参数，并且他们的定义会像其他两种过程宏一样，使用 Rust 代码来操作该 `TokenStream`。类函数宏的一个示例为 `sql!` 宏，其可以被如下调用： <!-- ignore -->
 ```rust,ignore
 let sql = sql!(SELECT * FROM posts WHERE id=1);
 ```
 
-This macro would parse the SQL statement inside it and check that it’s
-syntactically correct, which is much more complex processing than a
-`macro_rules!` macro can do. The `sql!` macro would be defined like this:
-
+这个宏会解析其内部的 SQL 语句并检查其语法是否正确，这比 `macro_rules!` 宏所能处理的要复杂得多。`sql!` 宏可能定义如下：
 ```rust,ignore
 #[proc_macro]
 pub fn sql(input: TokenStream) -> TokenStream {
 ```
 
-This definition is similar to the custom `derive` macro’s signature: We receive
-the tokens that are inside the parentheses and return the code we wanted to
-generate.
+这一定义类似于自定义 `derive` 宏的签名：我们接收圆括号内的令牌，并返回我们希望生成的代码。
+## 本章小结
 
-## Summary
-
-Whew! Now you have some Rust features in your toolbox that you likely won’t use
-often, but you’ll know they’re available in very particular circumstances.
-We’ve introduced several complex topics so that when you encounter them in
-error message suggestions or in other people’s code, you’ll be able to
-recognize these concepts and syntax. Use this chapter as a reference to guide
-you to solutions.
-
-Next, we’ll put everything we’ve discussed throughout the book into practice
-and do one more project!
+哇！现在，咱们的工具箱中有了一些咱们可以不会经常使用的 Rust 特性，不过咱们会明白，在一些极为特别的情况下他们是可用的。我们介绍了几个复杂的主题，以便在咱们在一些错误消息建议，或其他人的代码中遇到他们时，就能识别出这些概念和语法。请将这一章作为参考来指导咱们找到解决方案。
+接下来，我们将把整本书中讨论的所有内容付诸实践，再完成一个项目！
 
 [ref]: ../reference/macros-by-example.html
 [tlborm]: https://veykril.github.io/tlborm/

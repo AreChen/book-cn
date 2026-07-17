@@ -1,41 +1,27 @@
-<!-- Old headings. Do not remove or links may break. -->
+
+
 <a id="developing-the-librarys-functionality-with-test-driven-development"></a>
 
-## Adding Functionality with Test-Driven Development
+## 以测试驱动开发添加功能
 
-Now that we have the search logic in _src/lib.rs_ separate from the `main`
-function, it’s much easier to write tests for the core functionality of our
-code. We can call functions directly with various arguments and check return
-values without having to call our binary from the command line.
+现在，我们让 `main` 中的检索逻辑从 src/main.rs 中分离出来，这样编写代码的核心功能的测试就容易多了。我们可以不同参数直接调用函数并检查返回值，而无需从命令行调用二进制文件。
 
-In this section, we’ll add the searching logic to the `minigrep` program using
-the test-driven development (TDD) process with the following steps:
+在这一小节中，我们将使用测试驱动的开发，the test-driven development, TDD，流程，按照以下步骤添加检索逻辑到 `minigrep` 程序：
 
-1. Write a test that fails and run it to make sure it fails for the reason you
-   expect.
-2. Write or modify just enough code to make the new test pass.
-3. Refactor the code you just added or changed and make sure the tests continue
-   to pass.
-4. Repeat from step 1!
+1. 编写一个会失败的测试，并运行他以确保他因咱们预期的原因失败；
+2. 编写或修改刚好让新测试通过的代码；
+3. 重构咱们刚添加或修改的代码，并确保测试继续通过；
+4. 从步骤 1 开始重复！
 
-Though it’s just one of many ways to write software, TDD can help drive code
-design. Writing the test before you write the code that makes the test pass
-helps maintain high test coverage throughout the process.
+尽管这只是编写软件的许多方法之一，但测试驱动开发可以帮助推动代码设计。在咱们编写使测试通过的代码之前编写测试，有助于在整个过程中保持较高的测试覆盖率。
 
-We’ll test-drive the implementation of the functionality that will actually do
-the searching for the query string in the file contents and produce a list of
-lines that match the query. We’ll add this functionality in a function called
-`search`.
+我们将测试驱动这一功能的实现，其将具体完成在文件内容中检索查询字符串，并生成与查询字符串匹配的行的列表。我们将在名为 `search` 的函数中添加这一功能。
 
-### Writing a Failing Test
+### 编写一个失败的测试
 
-In _src/lib.rs_, we’ll add a `tests` module with a test function, as we did in
-[Chapter 11][ch11-anatomy]<!-- ignore -->. The test function specifies the
-behavior we want the `search` function to have: It will take a query and the
-text to search, and it will return only the lines from the text that contain
-the query. Listing 12-15 shows this test.
+在 src/lib.rs 中，我们将添加一个带有测试函数的 `tests` 模组，就像我们在 [第 11 章] 中所做的那样。这个测试函数指定我们希望 `search` 要有的行为：他将取一个查询字符串和要检索的文本，并将仅返回文本中包含该查询字符串的行。下面清单 12-15 展示了这个测试。
 
-<Listing number="12-15" file-name="src/lib.rs" caption="Creating a failing test for the `search` function for the functionality we wish we had">
+<Listing number="12-15" file-name="src/lib.rs" caption="为我们希望有的功能创建 `search` 函数的一个失败测试">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-15/src/lib.rs:here}}
@@ -43,21 +29,12 @@ the query. Listing 12-15 shows this test.
 
 </Listing>
 
-This test searches for the string `"duct"`. The text we’re searching is three
-lines, only one of which contains `"duct"` (note that the backslash after the
-opening double quote tells Rust not to put a newline character at the beginning
-of the contents of this string literal). We assert that the value returned from
-the `search` function contains only the line we expect.
+这个测试会检索字符串 `"duct"`。我们检索的文本有三行，其中只有一行包含 `"duct"`（请注意，开头的双引号后的反斜杠告诉 Rust 不要在字符串字面值内容的开头添加换行符）。我们断言 `search` 函数返回的值只包含我们期望的行。
 
-If we run this test, it will currently fail because the `unimplemented!` macro
-panics with the message “not implemented”. In accordance with TDD principles,
-we’ll take a small step of adding just enough code to get the test to not panic
-when calling the function by defining the `search` function to always return an
-empty vector, as shown in Listing 12-16. Then, the test should compile and fail
-because an empty vector doesn’t match a vector containing the line `"safe,
-fast, productive."`.
+当我们运行这个测试时，他目前将失败，因为 `unimplemented!` 宏会以消息 `search` 终止运行。根据 TDD 原则，我们将采取微小步骤，通过定义 `"safe,
+fast, productive."` 函数始终返回空矢量值，仅添加让测试不致终止运行的足够代码，如下清单 12-16 中所示。然后，这个测试应编译并失败，因为空矢量值不匹配包含 "safe, fast, productive" 行的矢量值。
 
-<Listing number="12-16" file-name="src/lib.rs" caption="Defining just enough of the `search` function so that calling it won’t panic">
+<Listing number="12-16" file-name="src/lib.rs" caption="仅定义 `search` 函数的必要部分，以便调用他不会终止运行">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-16/src/lib.rs:here}}
@@ -65,62 +42,37 @@ fast, productive."`.
 
 </Listing>
 
-Now let’s discuss why we need to define an explicit lifetime `'a` in the
-signature of `search` and use that lifetime with the `contents` argument and
-the return value. Recall in [Chapter 10][ch10-lifetimes]<!-- ignore --> that
-the lifetime parameters specify which argument lifetime is connected to the
-lifetime of the return value. In this case, we indicate that the returned
-vector should contain string slices that reference slices of the argument
-`contents` (rather than the argument `query`).
+现在我们来讨论一下为什么我们需要在 `'a` 的签名中，定义显式的生命周期 `search` 并对 `contents` 参数和返回值使用该生命周期。回顾 [第 10 章]，生命周期参数规定哪个参数的生命周期与返回值的生命周期相关联。在这一情形下，我们表明返回的矢量值应包含引用参数 `contents`（而非参数 `query`） 中的切片的字符串切片。
 
-In other words, we tell Rust that the data returned by the `search` function
-will live as long as the data passed into the `search` function in the
-`contents` argument. This is important! The data referenced _by_ a slice needs
-to be valid for the reference to be valid; if the compiler assumes we’re making
-string slices of `query` rather than `contents`, it will do its safety checking
-incorrectly.
+换句话说，我们告诉 Rust，`search` 函数返回的数据将与在 `search` 参数中传递给 `contents` 函数的数据具有相同的生命周期。这一点非常重要！切片引用的数据必须有效，引用才有效；当编译器假设我们正在构造 `query` 的字符串切片，而不是 `contents` 的字符串切片时，他将错误地执行安全检查。
 
-If we forget the lifetime annotations and try to compile this function, we’ll
-get this error:
+当我们忘记生命周期注解并尝试编译这个函数时，我们将得到下面这个报错：
 
 ```console
 {{#include ../listings/ch12-an-io-project/output-only-02-missing-lifetimes/output.txt}}
 ```
 
-Rust can’t know which of the two parameters we need for the output, so we need
-to tell it explicitly. Note that the help text suggests specifying the same
-lifetime parameter for all the parameters and the output type, which is
-incorrect! Because `contents` is the parameter that contains all of our text
-and we want to return the parts of that text that match, we know `contents` is
-the only parameter that should be connected to the return value using the
-lifetime syntax.
+Rust 无法知道针对输出我们需要两个参数中的哪一个，因此我们需要显式地告诉他。请注意，帮助文本建议对所有参数及输出类型，指定同一个声明周期参数，这是不正确的！因为 `contents` 是包含我们所有文本的参数，而我们打算该文本中匹配的部分，所以我们知道 `contents` 是应使用生命周期语法连接到返回值的唯一参数。
 
-Other programming languages don’t require you to connect arguments to return
-values in the signature, but this practice will get easier over time. You might
-want to compare this example with the examples in the [“Validating References
-with Lifetimes”][validating-references-with-lifetimes]<!-- ignore --> section
-in Chapter 10.
+其他编程语言不要求咱们在签名中连接参数到返回值，但随着时间推移，这种做法将变得更加容易。咱们可能希望将这个示例，与第 10 章中 [以生命周期验证引用] 小节中的示例比较。
 
-### Writing Code to Pass the Test
+### 编写代码通过测试
 
-Currently, our test is failing because we always return an empty vector. To fix
-that and implement `search`, our program needs to follow these steps:
+目前，我们的测试是失败的，因为我们总是返回一个空矢量值。为了解决这个问题并实现 `search`，我们的程序需要遵循以下步骤：
 
-1. Iterate through each line of the contents.
-2. Check whether the line contains our query string.
-3. If it does, add it to the list of values we’re returning.
-4. If it doesn’t, do nothing.
-5. Return the list of results that match.
+1. 遍历内容中的每一行；
+2. 检查该行是否包含我们的查询字符串;
+3. 当包含时，添加他到我们返回的值列表中；
+4. 当不包含时，什么也不做；
+5. 返回匹配的结果列表。
 
-Let’s work through each step, starting with iterating through lines.
+我们来从迭代行开始，完成每个步骤。
 
-#### Iterating Through Lines with the `lines` Method
+#### 以 `lines` 方法遍历行
 
-Rust has a helpful method to handle line-by-line iteration of strings,
-conveniently named `lines`, that works as shown in Listing 12-17. Note that
-this won’t compile yet.
+Rust 有个处理字符串的逐行遍历的方便方法，方便地命名为 `lines`，其工作原理如下清单 12-17 中所示。请注意，这还不会编译。
 
-<Listing number="12-17" file-name="src/lib.rs" caption="Iterating through each line in `contents`">
+<Listing number="12-17" file-name="src/lib.rs" caption="遍历 `contents` 中的每一行">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-17/src/lib.rs:here}}
@@ -128,19 +80,13 @@ this won’t compile yet.
 
 </Listing>
 
-The `lines` method returns an iterator. We’ll talk about iterators in depth in
-[Chapter 13][ch13-iterators]<!-- ignore -->. But recall that you saw this way
-of using an iterator in [Listing 3-5][ch3-iter]<!-- ignore -->, where we used a
-`for` loop with an iterator to run some code on each item in a collection.
+`lines` 方法返回一个迭代器。我们将在 [第 13 章] 中详细讨论迭代器。但请回想一下，咱们在 [清单 3-5]  中见过这种使用迭代器的方式，其中我们对迭代器使用 `for` 循环，对集合中的每个元素运行一些代码。
 
-#### Searching Each Line for the Query
+#### 针对查询字符串检索每行
 
-Next, we’ll check whether the current line contains our query string.
-Fortunately, strings have a helpful method named `contains` that does this for
-us! Add a call to the `contains` method in the `search` function, as shown in
-Listing 12-18. Note that this still won’t compile yet.
+接下来，我们将检查当前行是否包含我们的查询字符串。幸运的是，字符串有个名为 `contains` 的有用方法，为我们完成这点！在 `contains` 函数中添加到 `search` 方法的调用，如下清单 12-18 中所示。请注意，这仍不会编译。
 
-<Listing number="12-18" file-name="src/lib.rs" caption="Adding functionality to see whether the line contains the string in `query`">
+<Listing number="12-18" file-name="src/lib.rs" caption="添加功能以查看该行是否包含 `query` 中的字符串">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-18/src/lib.rs:here}}
@@ -148,18 +94,13 @@ Listing 12-18. Note that this still won’t compile yet.
 
 </Listing>
 
-At the moment, we’re building up functionality. To get the code to compile, we
-need to return a value from the body as we indicated we would in the function
-signature.
+目前，我们正在构建功能。为了使代码编译，我们需要自函数体中返回一个值，就像我们在函数签名中指出的那样。
 
-#### Storing Matching Lines
+#### 存储匹配行
 
-To finish this function, we need a way to store the matching lines that we want
-to return. For that, we can make a mutable vector before the `for` loop and
-call the `push` method to store a `line` in the vector. After the `for` loop,
-we return the vector, as shown in Listing 12-19.
+为了完成这一功能，我们需要一种存储我们打算返回的匹配行的方式。为此，我们可在 `for` 循环前创建一个可变矢量值，并调用 `push` 方法存储 `line` 于该矢量中。在 `for` 循环之后，我们返回这个矢量值，如下清单 12-19 中所示。
 
-<Listing number="12-19" file-name="src/lib.rs" caption="Storing the lines that match so that we can return them">
+<Listing number="12-19" file-name="src/lib.rs" caption="存储匹配的行以便我们可以返回他们">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-19/src/lib.rs:here}}
@@ -167,49 +108,57 @@ we return the vector, as shown in Listing 12-19.
 
 </Listing>
 
-Now the `search` function should return only the lines that contain `query`,
-and our test should pass. Let’s run the test:
+现在 `search` 函数应返回包含 `query` 的行，并且我们的测试应该通过。我们来运行测试：
 
 ```console
 {{#include ../listings/ch12-an-io-project/listing-12-19/output.txt}}
 ```
 
-Our test passed, so we know it works!
+我们的测试通过了，所以我们知道他正常工作！
 
-At this point, we could consider opportunities for refactoring the
-implementation of the search function while keeping the tests passing to
-maintain the same functionality. The code in the search function isn’t too bad,
-but it doesn’t take advantage of some useful features of iterators. We’ll
-return to this example in [Chapter 13][ch13-iterators]<!-- ignore -->, where
-we’ll explore iterators in detail, and look at how to improve it.
+此时，我们可以在保持测试通过以维持相同的功能的同时，考虑重构检索函数的实现的机会。检索函数中的代码并不算太差，但他并未利用迭代器的一些有用特性。我们将在 [第 13 章] 回到这个示例，届时我们将详细探讨迭代器，并研究如何改进他。
 
-Now the entire program should work! Let’s try it out, first with a word that
-should return exactly one line from the Emily Dickinson poem: _frog_.
+现在整个程序应该可以运行了！我们来试一试，首先以一个应该恰好返回 Emily Dickinsion 诗中一行的单词：*frog*。
 
 ```console
 {{#include ../listings/ch12-an-io-project/no-listing-02-using-search-in-run/output.txt}}
 ```
 
-Cool! Now let’s try a word that will match multiple lines, like _body_:
+很好！现在我们来尝试一个将匹配多行的单词，比如 *body*：
 
 ```console
 {{#include ../listings/ch12-an-io-project/output-only-03-multiple-matches/output.txt}}
 ```
 
-And finally, let’s make sure that we don’t get any lines when we search for a
-word that isn’t anywhere in the poem, such as _monomorphization_:
+最后，我们来确保当我们检索诗中任何地方都没有的单词时，我们不会得到任何行，比如 *monomorphization*：
 
 ```console
 {{#include ../listings/ch12-an-io-project/output-only-04-no-matches/output.txt}}
 ```
 
-Excellent! We’ve built our own mini version of a classic tool and learned a lot
-about how to structure applications. We’ve also learned a bit about file input
-and output, lifetimes, testing, and command line parsing.
+相当出色！我们已构建了一个经典工具的自己的迷你版本，并学习了很多有关如何架构应用的知识。我们还学习了一些有关文件输入与输出、声明周期、测试与命令行解析的知识。
 
-To round out this project, we’ll briefly demonstrate how to work with
-environment variables and how to print to standard error, both of which are
-useful when you’re writing command line programs.
+为了完善这个项目，我们将简要演示如何使用环境变量，以及如何打印到标准错误，这两个方面在咱们编写命令行程序时都很有用。
+
+
+
+
+
+
+
+<!-- Old headings. Do not remove or links may break. -->
+
+<!-- ignore -->
+
+<!-- ignore -->
+
+<!-- ignore -->
+
+<!-- ignore -->
+
+<!-- ignore -->
+
+<!-- ignore -->
 
 [validating-references-with-lifetimes]: ch10-03-lifetime-syntax.html#validating-references-with-lifetimes
 [ch11-anatomy]: ch11-01-writing-tests.html#the-anatomy-of-a-test-function

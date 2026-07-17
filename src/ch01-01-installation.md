@@ -1,126 +1,95 @@
-## Installation
+## 安装
 
-The first step is to install Rust. We’ll download Rust through `rustup`, a
-command line tool for managing Rust versions and associated tools. You’ll need
-an internet connection for the download.
+第一步是安装 Rust。我们会通过 `rustup` 下载 Rust；它是一个用于管理 Rust 版本及相关工具的命令行工具。下载过程需要互联网连接。
 
-> Note: If you prefer not to use `rustup` for some reason, please see the
-> [Other Rust Installation Methods page][otherinstall] for more options.
+> 注意：如果你出于某种原因不想使用 `rustup`，请参阅[其他 Rust 安装方式页面][otherinstall]，了解更多选项。
 
-The following steps install the latest stable version of the Rust compiler.
-Rust’s stability guarantees ensure that all the examples in the book that
-compile will continue to compile with newer Rust versions. The output might
-differ slightly between versions because Rust often improves error messages and
-warnings. In other words, any newer, stable version of Rust you install using
-these steps should work as expected with the content of this book.
+以下步骤会安装最新的 Rust 稳定版编译器。Rust 的稳定性保证本书中所有能够编译的示例在更新的 Rust 版本中仍然可以编译。不同版本的输出可能略有差异，因为 Rust 经常改进错误信息和警告。换句话说，使用这些步骤安装的任何更新后的稳定版 Rust，都应该能够按本书内容预期的方式工作。
 
-> ### Command Line Notation
+> ### 命令行记法
 >
-> In this chapter and throughout the book, we’ll show some commands used in the
-> terminal. Lines that you should enter in a terminal all start with `$`. You
-> don’t need to type the `$` character; it’s the command line prompt shown to
-> indicate the start of each command. Lines that don’t start with `$` typically
-> show the output of the previous command. Additionally, PowerShell-specific
-> examples will use `>` rather than `$`.
+> 在本章以及全书中，我们会展示一些在终端中使用的命令。需要输入终端的行都以 `$` 开头。你不需要输入 `$` 字符；它是表示命令开始的命令行提示符。不以 `$` 开头的行通常表示上一条命令的输出。此外，PowerShell 专用示例会使用 `>` 而不是 `$`。
 
-### Installing `rustup` on Linux or macOS
+### 在 Linux 与 macOS 上安装 `rustup`
 
-If you’re using Linux or macOS, open a terminal and enter the following command:
+如果咱们使用的是 Linux 或 macOS，请打开终端并输入以下命令：
 
 ```console
 $ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 ```
 
-The command downloads a script and starts the installation of the `rustup`
-tool, which installs the latest stable version of Rust. You might be prompted
-for your password. If the install is successful, the following line will appear:
+这条命令会下载一个脚本并开始安装 `rustup` 工具，而 rustup 会安装最新的 Rust 稳定版。系统可能会提示你输入密码。如果安装成功，就会显示下面这一行：
 
 ```text
 Rust is installed now. Great!
 ```
 
-You will also need a _linker_, which is a program that Rust uses to join its
-compiled outputs into one file. It is likely you already have one. If you get
-linker errors, you should install a C compiler, which will typically include a
-linker. A C compiler is also useful because some common Rust packages depend on
-C code and will need a C compiler.
+我们还需要一个链接器，把 Rust 的编译输出连接成一个文件。你很可能已经有了链接器。如果出现链接器错误，就需要安装一个通常包含链接器的 C 编译器。C 编译器也很有用，因为一些常见的 Rust 包依赖 C 代码，因此需要 C 编译器。
 
-On macOS, you can get a C compiler by running:
+在 macOS 上，咱们可以通过运行：
 
 ```console
 $ xcode-select --install
 ```
 
-Linux users should generally install GCC or Clang, according to their
-distribution’s documentation. For example, if you use Ubuntu, you can install
-the `build-essential` package.
+获得一个 C 编译器。
 
-### Installing `rustup` on Windows
+Linux 用户一般应根据其发行版的文档，安装 GCC 或 Clang。例如，如果咱们使用 Ubuntu，则可以安装 `build-essential` 软件包。
 
-On Windows, go to [https://www.rust-lang.org/tools/install][install]<!-- ignore
---> and follow the instructions for installing Rust. At some point in the
-installation, you’ll be prompted to install Visual Studio. This provides a
-linker and the native libraries needed to compile programs. If you need more
-help with this step, see
+### 在 Windows 上安装 `rustup`
+
+在 Windows 上，请前往 [https://www.rust-lang.org/tools/install][install]<!-- ignore
+--> 并按照说明安装 Rust。安装过程中的某个时刻，系统会提示你安装 Visual Studio。它提供编译程序所需的链接器和本机库。如果需要这一步的更多帮助，请参阅
 [https://rust-lang.github.io/rustup/installation/windows-msvc.html][msvc]<!--
-ignore -->.
+ignore -->。
 
-The rest of this book uses commands that work in both _cmd.exe_ and PowerShell.
-If there are specific differences, we’ll explain which to use.
+本书其余部分使用的命令既可在 _cmd.exe_ 中运行，也可在 PowerShell 中运行。如果两者存在具体差异，我们会说明应使用哪一种。
 
-### Troubleshooting
+### 问题排除
 
-To check whether you have Rust installed correctly, open a shell and enter this
-line:
+要检查 Rust 安装是否正确，请打开 shell 并输入这一行：
 
 ```console
 $ rustc --version
 ```
 
-You should see the version number, commit hash, and commit date for the latest
-stable version that has been released, in the following format:
+你应该会看到最新发布的稳定版本的版本号、提交哈希和提交日期，格式如下：
 
 ```text
 rustc x.y.z (abcabcabc yyyy-mm-dd)
 ```
 
-If you see this information, you have installed Rust successfully! If you don’t
-see this information, check that Rust is in your `%PATH%` system variable as
-follows.
+如果看到这些信息，就说明 Rust 已经安装成功！如果没有看到，请按下面的方式检查 Rust 是否位于 `%PATH%` 系统变量中。
 
-In Windows CMD, use:
+在 Windows CMD 中使用：
 
 ```console
 > echo %PATH%
 ```
 
-In PowerShell, use:
+在 PowerShell 中，请使用：
 
 ```powershell
 > echo $env:Path
 ```
 
-In Linux and macOS, use:
+在 Linux 及 macOS 中，请使用：
 
 ```console
 $ echo $PATH
 ```
 
-If that’s all correct and Rust still isn’t working, there are a number of
-places you can get help. Find out how to get in touch with other Rustaceans (a
-silly nickname we call ourselves) on [the community page][community].
+如果上述内容都正确而 Rust 仍然无法工作，你可以从许多地方获得帮助。请在[社区页面][community]了解如何联系其他 Rustaceans（这是我们给自己起的一个有趣昵称）。
 
-### Updating and Uninstalling
+### 更新与卸载
 
-Once Rust is installed via `rustup`, updating to a newly released version is
-easy. From your shell, run the following update script:
+通过 `rustup` 安装 Rust 后，更新到新近发布的版本，就很容易了。请在 shell 中运行以下更新脚本：
 
 ```console
 $ rustup update
 ```
 
-To uninstall Rust and `rustup`, run the following uninstall script from your
-shell:
+若要卸载 Rust 和 `rustup`，请在 shell 中运行以下卸载脚本：
 
 ```console
 $ rustup self uninstall
@@ -129,34 +98,22 @@ $ rustup self uninstall
 <!-- Old headings. Do not remove or links may break. -->
 <a id="local-documentation"></a>
 
-### Reading the Local Documentation
+### 本地文档
 
-The installation of Rust also includes a local copy of the documentation so
-that you can read it offline. Run `rustup doc` to open the local documentation
-in your browser.
+Rust 的安装还包含一份本地文档副本，方便你离线阅读。运行 `rustup doc`，即可在浏览器中打开本地文档。
 
-Any time a type or function is provided by the standard library and you’re not
-sure what it does or how to use it, use the application programming interface
-(API) documentation to find out!
+当标准库提供了某个类型或函数，而你不确定它的作用或用法时，请查阅应用程序编程接口（API）文档来了解详情！
 
 <!-- Old headings. Do not remove or links may break. -->
 <a id="text-editors-and-integrated-development-environments"></a>
 
-### Using Text Editors and IDEs
+### 使用文本编辑器与 IDE
 
-This book makes no assumptions about what tools you use to author Rust code.
-Just about any text editor will get the job done! However, many text editors and
-integrated development environments (IDEs) have built-in support for Rust. You
-can always find a fairly current list of many editors and IDEs on [the tools
-page][tools] on the Rust website.
+本书不假定你使用什么工具编写 Rust 代码。几乎任何文本编辑器都能完成这项工作！不过，许多文本编辑器和集成开发环境（IDE）都内置了 Rust 支持。你可以在 Rust 网站的[工具页面][tools]找到一份相当新的编辑器和 IDE 列表。
 
-### Working Offline with This Book
+### 离线使用本书
 
-In several examples, we will use Rust packages beyond the standard library. To
-work through those examples, you will either need to have an internet connection
-or to have downloaded those dependencies ahead of time. To download the
-dependencies ahead of time, you can run the following commands. (We’ll explain
-what `cargo` is and what each of these commands does in detail later.)
+在几个示例中，我们会使用标准库之外的 Rust 包。要完成这些示例，你需要保持互联网连接，或者提前下载这些依赖。若要提前下载依赖，可以运行下面的命令。（我们稍后会详细解释 `cargo` 是什么，以及每条命令的作用。）
 
 <!-- When updating the version of `rand` used, also update the version of
 `rand` used in these files so they all match:
@@ -172,11 +129,7 @@ $ cd get-dependencies
 $ cargo add rand@0.10.1 trpl@0.2.0
 ```
 
-This will cache the downloads for these packages so you will not need to
-download them later. Once you have run this command, you do not need to keep the
-`get-dependencies` folder. If you have run this command, you can use the
-`--offline` flag with all `cargo` commands in the rest of the book to use these
-cached versions instead of attempting to use the network.
+这会缓存这些包的下载内容，这样之后就不需要再次下载。运行此命令后，不必保留 `get-dependencies` 文件夹。运行过该命令后，你可以在本书其余部分的所有 `--offline` 命令中使用 `cargo` 标志，让 Cargo 使用缓存的版本，而不是尝试访问网络。
 
 [otherinstall]: https://forge.rust-lang.org/infra/other-installation-methods.html
 [install]: https://www.rust-lang.org/tools/install

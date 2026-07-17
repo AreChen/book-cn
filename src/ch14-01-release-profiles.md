@@ -1,17 +1,11 @@
-## Customizing Builds with Release Profiles
+## 在发布配置文件下定制构建
 
-In Rust, _release profiles_ are predefined, customizable profiles with
-different configurations that allow a programmer to have more control over
-various options for compiling code. Each profile is configured independently of
-the others.
+在 Rust 中，所谓 *发布配置文件，release profiles*，是一些预定义的、定制的配置文件，带有允许程序员对编译代码的各种有着更多控制的不同选项。每个配置文件都是相对于其他配置文件独立配置的。
 
-Cargo has two main profiles: the `dev` profile Cargo uses when you run `cargo
-build`, and the `release` profile Cargo uses when you run `cargo build
---release`. The `dev` profile is defined with good defaults for development,
-and the `release` profile has good defaults for release builds.
-
-These profile names might be familiar from the output of your builds:
-
+Cargo 有两个主要配置文件：`dev` 配置文件在运行 `cargo
+build` 时使用，`release` 配置文件在运行 `cargo build
+--release` 时使用。`dev` 配置文件为开发提供了良好的默认设置，而 `release` 配置文件为发布构建提供了良好的默认设置。
+dev 配置文件定义了用于开发的一些良好默认配置，release 配置文件则有着一些用于发布构建的良好默认配置。
 <!-- manual-regeneration
 anywhere, run:
 cargo build
@@ -26,15 +20,11 @@ $ cargo build --release
     Finished `release` profile [optimized] target(s) in 0.32s
 ```
 
-The `dev` and `release` are these different profiles used by the compiler.
+`dev` 配置文件定义了用于开发的一些良好默认配置，`release` 配置文件则有着一些用于发布构建的良好默认配置。
 
-Cargo has default settings for each of the profiles that apply when you haven't
-explicitly added any `[profile.*]` sections in the project’s _Cargo.toml_ file.
-By adding `[profile.*]` sections for any profile you want to customize, you
-override any subset of the default settings. For example, here are the default
-values for the `opt-level` setting for the `dev` and `release` profiles:
+Cargo 对每种配置文件都有一些默认配置，应用于咱们未曾在项目的 `[profile.*]` 文件中显式地添加任何 `[profile.*]` 小节时。通过针对咱们打算定制的配置文件的 `opt-level` 小节，咱们可以覆盖默认设置中的任何子集。例如，下面是 `dev` 与 `release` 配置文件的 opt-level 设置的默认值：
 
-<span class="filename">Filename: Cargo.toml</span>
+<span class="filename">文件名： Cargo.toml</span>
 
 ```toml
 [profile.dev]
@@ -44,32 +34,15 @@ opt-level = 0
 opt-level = 3
 ```
 
-The `opt-level` setting controls the number of optimizations Rust will apply to
-your code, with a range of 0 to 3. Applying more optimizations extends
-compiling time, so if you’re in development and compiling your code often,
-you’ll want fewer optimizations to compile faster even if the resultant code
-runs slower. The default `opt-level` for `dev` is therefore `0`. When you’re
-ready to release your code, it’s best to spend more time compiling. You’ll only
-compile in release mode once, but you’ll run the compiled program many times,
-so release mode trades longer compile time for code that runs faster. That is
-why the default `opt-level` for the `release` profile is `3`.
-
-You can override a default setting by adding a different value for it in
-_Cargo.toml_. For example, if we want to use optimization level 1 in the
-development profile, we can add these two lines to our project’s _Cargo.toml_
-file:
-
-<span class="filename">Filename: Cargo.toml</span>
+`opt-level` 设置控制 Rust 对代码应用的优化数量，取值范围为 0 到 3。更多优化会延长编译时间，因此在开发阶段频繁编译代码时，应该减少优化以加快编译速度，即使生成的代码运行得更慢。`opt-level` 是 `dev` 的默认值 `0`。准备发布代码时，最好花更多时间进行编译：发布模式只需编译一次，但编译后的程序会运行很多次，因此发布模式用更长的编译时间换取运行更快的代码。这就是配置文件的默认 `opt-level` 在 `release` 中为 `3` 的原因。
+咱们可以通过在 Cargo.toml 中为默认设置添加不同值来覆盖默认设置。例如，当我们打算在开发配置文件中使用优化级别 1 时，我们可以添加下面这两行到项目的 Cargo.toml 文件：
+<span class="filename">文件名： Cargo.toml</span>
 
 ```toml
 [profile.dev]
 opt-level = 1
 ```
 
-This code overrides the default setting of `0`. Now when we run `cargo build`,
-Cargo will use the defaults for the `dev` profile plus our customization to
-`opt-level`. Because we set `opt-level` to `1`, Cargo will apply more
-optimizations than the default, but not as many as in a release build.
+这段代码会覆盖默认设置 `0`。现在，当我们运行 `cargo build` 时，Cargo 将使用 `dev` 配置文件的默认设置以及我们对 `opt-level` 的定制设置。由于我们设置 `opt-level` 为 `1`，Cargo 将应用相比默认设置更多的优化，但不如发布构建下的那么多。
 
-For the full list of configuration options and defaults for each profile, see
-[Cargo’s documentation](https://doc.rust-lang.org/cargo/reference/profiles.html).
+针对每种配置文件的完整配置选项和默认设置清单，请参阅 [Cargo 文档](https://doc.rust-lang.org/cargo/reference/profiles.html)。

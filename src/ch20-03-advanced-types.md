@@ -1,82 +1,49 @@
-## Advanced Types
+## 高级类型
 
-The Rust type system has some features that we’ve so far mentioned but haven’t
-yet discussed. We’ll start by discussing newtypes in general as we examine why
-they are useful as types. Then, we’ll move on to type aliases, a feature
-similar to newtypes but with slightly different semantics. We’ll also discuss
-the `!` type and dynamically sized types.
+Rust 类型系统有着一些我们到目前为止提到过，但尚未讨论的特性。我们将 `!`
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="using-the-newtype-pattern-for-type-safety-and-abstraction"></a>
 
-### Type Safety and Abstraction with the Newtype Pattern
+### 类型安全与新型模式下的抽象
 
-This section assumes you’ve read the earlier section [“Implementing External
-Traits with the Newtype Pattern”][newtype]<!-- ignore -->. The newtype pattern
-is also useful for tasks beyond those we’ve discussed so far, including
-statically enforcing that values are never confused and indicating the units of
-a value. You saw an example of using newtypes to indicate units in Listing
-20-16: Recall that the `Millimeters` and `Meters` structs wrapped `u32` values
-in a newtype. If we wrote a function with a parameter of type `Millimeters`, we
-wouldn’t be able to compile a program that accidentally tried to call that
-function with a value of type `Meters` or a plain `u32`.
+这一小节假设咱们已经阅读了前面小节 [“Implementing External
+Traits with the Newtype Pattern”][newtype] 。新型模式对于我们迄今为止讨论过的任务也很有用，包括静态地强制值永不混淆，以及标明值的单位。在 清单 20-16 中，咱们已经看到使用新型表示单位的示例：回顾一下，`Millimeters` 与 `Meters` 两个结构体都将 `u32` 值封装在新型中。若我们编写了一个带有 `Millimeters` 类型参数的函数，我们将无法编译一个意外尝试以类型 `Meters` 或普通 `u32` 值调用该函数的程序。 <!-- ignore -->
 
-We can also use the newtype pattern to abstract away some implementation
-details of a type: The new type can expose a public API that is different from
-the API of the private inner type.
+我们还可以使用新型模式来抽象出类型的一些实现细节：新类型可以暴露一个不同于私有的内层类型 API 的公开 API。
 
-Newtypes can also hide internal implementation. For example, we could provide a
-`People` type to wrap a `HashMap<i32, String>` that stores a person’s ID
-associated with their name. Code using `People` would only interact with the
-public API we provide, such as a method to add a name string to the `People`
-collection; that code wouldn’t need to know that we assign an `i32` ID to names
-internally. The newtype pattern is a lightweight way to achieve encapsulation
-to hide implementation details, which we discussed in the [“Encapsulation that
+新型模式还可以隐藏内部实现。例如，我们可提供 `People` 类型来封装 `HashMap<i32, String>`，该 `People` 存储与姓名关联的人员 ID。使用 `People` 的代码只会与我们提供的公开 API 交互，比如添加姓名字符串到 `i32` 集合的方法；该代码无需知道我们在内部分配 i32 的 ID 给姓名。新型模式属于一种实现封装以隐藏实现细节的轻量级方法，我们在第 18 章中 [“Encapsulation that
 Hides Implementation
-Details”][encapsulation-that-hides-implementation-details]<!-- ignore -->
-section in Chapter 18.
+Details”][encapsulation-that-hides-implementation-details] 小节中曾对此讨论过。 <!-- ignore -->
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="creating-type-synonyms-with-type-aliases"></a>
 
-### Type Synonyms and Type Aliases
+### 类型同义词和类型别名
 
-Rust provides the ability to declare a _type alias_ to give an existing type
-another name. For this we use the `type` keyword. For example, we can create
-the alias `Kilometers` to `i32` like so:
+Rust 提供了声明 *类型别名* 的能力，以便给予现有类型另一个名字。为此，我们使用 `type` 关键字。例如，我们可以像下面这样创建 `Kilometers` 的别名 `i32`：
 
 ```rust
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-04-kilometers-alias/src/main.rs:here}}
 ```
 
-Now the alias `Kilometers` is a _synonym_ for `i32`; unlike the `Millimeters`
-and `Meters` types we created in Listing 20-16, `Kilometers` is not a separate,
-new type. Values that have the type `Kilometers` will be treated the same as
-values of type `i32`:
+现在，别名 `Kilometers` 是 `i32` 的 *同义词*；与我们在 清单 20-16 中创建的 `Millimeters` 与 `Meters` 两个类型不同，`Kilometers` 并不是个单独的新类型。类型为 `Kilometers` 的值将被视为与类型 `i32` 的值相同：
 
 ```rust
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-04-kilometers-alias/src/main.rs:there}}
 ```
 
-Because `Kilometers` and `i32` are the same type, we can add values of both
-types and can pass `Kilometers` values to functions that take `i32`
-parameters. However, using this method, we don’t get the type-checking benefits
-that we get from the newtype pattern discussed earlier. In other words, if we
-mix up `Kilometers` and `i32` values somewhere, the compiler will not give us
-an error.
+由于 `Kilometers` 与 `i32` 属于同一类型，我们可以将这两种类型的值相加，并且可以传递 `Kilometers` 的值给取 `i32` 参数的函数。但是，使用这种方法，我们无法获得前面讨论过的新型模式中的类型检查优势。换句话说，当我们在某处混用了 `Kilometers` 与 `i32` 的值时，编译器也不会给予我们报错。
 
-The main use case for type synonyms is to reduce repetition. For example, we
-might have a lengthy type like this:
+类型同义词的主要用例是减少重复。例如，我们可能遇到如下这种冗长的类型：
 
 ```rust,ignore
 Box<dyn Fn() + Send + 'static>
 ```
 
-Writing this lengthy type in function signatures and as type annotations all
-over the code can be tiresome and error-prone. Imagine having a project full of
-code like that in Listing 20-25.
+在函数签名中，以及作为代码各处的类型注解，写下这种冗长的类型，可能会很烦人且容易出错。设想一下，当某个项目全是像下面清单 20-25 中的代码。
 
 <Listing number="20-25" caption="Using a long type in many places">
 
@@ -86,9 +53,7 @@ code like that in Listing 20-25.
 
 </Listing>
 
-A type alias makes this code more manageable by reducing the repetition. In
-Listing 20-26, we’ve introduced an alias named `Thunk` for the verbose type and
-can replace all uses of the type with the shorter alias `Thunk`.
+类型别名通过减少重复，使这段代码更易于管理。在下面清单 20-26 中，我们针对该冗长类型引入了一个名为 `Thunk` 的别名，并可以用这个更短的别名 `Thunk`替换该类型的所有使用。
 
 <Listing number="20-26" caption="Introducing a type alias, `Thunk`, to reduce repetition">
 
@@ -98,62 +63,39 @@ can replace all uses of the type with the shorter alias `Thunk`.
 
 </Listing>
 
-This code is much easier to read and write! Choosing a meaningful name for a
-type alias can help communicate your intent as well (_thunk_ is a word for code
-to be evaluated at a later time, so it’s an appropriate name for a closure that
-gets stored).
+这段代码现在更容易月的和编写！为类型别名选择一个有意义的名字，也可以帮助传达咱们的意图（ *thunk* 是指将在稍后执行的代码，因此对于一个被存储的闭包来说，这是个恰当的名字）。
 
-Type aliases are also commonly used with the `Result<T, E>` type for reducing
-repetition. Consider the `std::io` module in the standard library. I/O
-operations often return a `Result<T, E>` to handle situations when operations
-fail to work. This library has a `std::io::Error` struct that represents all
-possible I/O errors. Many of the functions in `std::io` will be returning
-`Result<T, E>` where the `E` is `std::io::Error`, such as these functions in
-the `Write` trait:
+类型别名也经常与 `Result<T, E>` 一起使用，以减少重复。设想标准库中的 `std::io` 模组。I/O 操作通常返回 `Result<T, E>`，来处理操作失败的情况。这个库有个 `std::io::Error` 结构体，表示所有可能的 I/O 错误的。`std::io` 中的许多函数都会返回 `Result<T, E>`，其中 `E` 就是 `std::io::Error`，比如 `Write` 特质中的这些函数：
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-05-write-trait/src/lib.rs}}
 ```
 
-The `Result<..., Error>` is repeated a lot. As such, `std::io` has this type
-alias declaration:
+其中 `Result<..., Error>` 多次重复。因此，`std::io` 便包含了以下的类型别名声明：
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-06-result-alias/src/lib.rs:here}}
 ```
 
-Because this declaration is in the `std::io` module, we can use the fully
-qualified alias `std::io::Result<T>`; that is, a `Result<T, E>` with the `E`
-filled in as `std::io::Error`. The `Write` trait function signatures end up
-looking like this:
+由于这一声明位于 `std::io` 模组中，我们可以使用完全限定的别名 `std::io::Result<T>`；也就是说，这是个 `Result<T, E>`，其中 `E` 被填入为 `std::io::Error`。`Write` 特质的函数签名最终看起来像下面这样：
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-06-result-alias/src/lib.rs:there}}
 ```
 
-The type alias helps in two ways: It makes code easier to write _and_ it gives
-us a consistent interface across all of `std::io`. Because it’s an alias, it’s
-just another `Result<T, E>`, which means we can use any methods that work on
-`Result<T, E>` with it, as well as special syntax like the `?` operator.
+类型别名有两种作用：他使代码更容易编写，*并* 给予我们对整个 `std::io` 的一致接口。由于他是个别名，因此他只是另一个 `Result<T, E>`，这意味着我们可以时与哦嗯任何适用于 `Result<T, E>` 的方法，以及诸如 `?` 运算符这样的特殊语法。
 
-### The Never Type That Never Returns
+### 永不返回的 never 类型
 
-Rust has a special type named `!` that’s known in type theory lingo as the
-_empty type_ because it has no values. We prefer to call it the _never type_
-because it stands in the place of the return type when a function will never
-return. Here is an example:
+Rust 有一种名为 `!` 的特殊类型，在类型论术语种称为 *空类型*，因为他没有值。我们更倾向于称其为 *never 类型*，因为当函数永远不返回时，他会代替返回类型。下面是个示例：
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-07-never-type/src/lib.rs:here}}
 ```
 
-This code is read as “the function `bar` returns never.” Functions that return
-never are called _diverging functions_. We can’t create values of the type `!`,
-so `bar` can never possibly return.
+这段代码读作 “函数 `bar` 返回 `!`。” 返回 `bar` 函数被称为 *发散函数*。我们无法创建 ! 类型的值，因此 bar 永远不可能返回。
 
-But what use is a type you can never create values for? Recall the code from
-Listing 2-5, part of the number-guessing game; we’ve reproduced a bit of it
-here in Listing 20-27.
+但是，一种咱们永远无法针对其创建值的类型有什么用处呢？回顾 清单 2-5 中的代码，那时猜数游戏的一部分；我们已在下面清单 20-27 中重现了其中一部分。
 
 <Listing number="20-27" caption="A `match` with an arm that ends in `continue`">
 
@@ -163,138 +105,76 @@ here in Listing 20-27.
 
 </Listing>
 
-At the time, we skipped over some details in this code. In [“The `match`
-Control Flow Construct”][the-match-control-flow-construct]<!-- ignore -->
-section in Chapter 6, we discussed that `match` arms must all return the same
-type. So, for example, the following code doesn’t work:
+当时，我们跳过了这段代码种的一些细节。在第 6 章中 [“The `match`
+Control Flow Construct”][the-match-control-flow-construct] 小节中，我们讨论了 `match` 支臂必须返回相同的类型。因此，例如，以下代码不会正常运行： <!-- ignore -->
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-08-match-arms-different-types/src/main.rs:here}}
 ```
 
-The type of `guess` in this code would have to be an integer _and_ a string,
-and Rust requires that `guess` have only one type. So, what does `continue`
-return? How were we allowed to return a `u32` from one arm and have another arm
-that ends with `continue` in Listing 20-27?
+这段代码中的 `guess` 类型将必定是整数和字符串，而 Rust 要求 `guess` 只能有一种类型。那么，`continue` 返回什么呢？在清单 20-27 中，我们为何被允许在一个支臂中返回 `u32`，并让另一个支臂以 `continue` 结束呢？
 
-As you might have guessed, `continue` has a `!` value. That is, when Rust
-computes the type of `guess`, it looks at both match arms, the former with a
-value of `u32` and the latter with a `!` value. Because `!` can never have a
-value, Rust decides that the type of `guess` is `u32`.
+正如您可能已经猜到的，`continue` 有个 `!` 的值。也就是说，当 Rust 计算 `guess` 的类型时，他会同时查看两个匹配支臂，前者的值为 `u32`，后者的值为 `!` 值。由于 `!` 永远不会有值，Rust 因此确定 `guess` 的类型是 `u32`。
 
-The formal way of describing this behavior is that expressions of type `!` can
-be coerced into any other type. We’re allowed to end this `match` arm with
-`continue` because `continue` doesn’t return a value; instead, it moves control
-back to the top of the loop, so in the `Err` case, we never assign a value to
-`guess`.
+描述这种行为的正式说法是，类型为 `!` 的表达式可以被强制转换为任何其他类型。我们允许用以 `match` 结束这个匹配支臂，因为 `continue` 不会返回值；相反，他会迁移控制权到该循环的顶部，因此在 `continue` 情形下下，我们永远不会指派值给 `Err`。 `guess`
 
-The never type is useful with the `panic!` macro as well. Recall the `unwrap`
-function that we call on `Option<T>` values to produce a value or panic with
-this definition:
+`panic!` 类型对 `unwrap` 也很有用。回顾我们对 `Option<T>` 值调用 unwrap 函数，以通过以下定义生成一个值或终止运行：
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-09-unwrap-definition/src/lib.rs:here}}
 ```
 
-In this code, the same thing happens as in the `match` in Listing 20-27: Rust
-sees that `val` has the type `T` and `panic!` has the type `!`, so the result
-of the overall `match` expression is `T`. This code works because `panic!`
-doesn’t produce a value; it ends the program. In the `None` case, we won’t be
-returning a value from `unwrap`, so this code is valid.
+在这段代码中，发生了与清单 20-27 中 `match` 表达式中相同的事情：Rust 发现 `val` 具有类型 `T`，而 `panic!` 有着类型 `!`，因此整个 `match` 表达式的结果是 `T`。这段代码之所以能正常运行，是因为 `panic!` 不会产生值；他会终止程序。在 `None` 情形下，我们不会从 `unwrap` 返回值，因此这段代码是有效的。
 
-One final expression that has the type `!` is a loop:
+最后一个有着 `!` 类型的表达式是 loop 表达式：
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-10-loop-returns-never/src/main.rs:here}}
 ```
 
-Here, the loop never ends, so `!` is the value of the expression. However, this
-wouldn’t be true if we included a `break`, because the loop would terminate
-when it got to the `break`.
+在这里，循环永远不会结束，因此 `!` 就是该表达式的值。然后，若我们包含一个 `break`，情况就不同了，因为循环在遇到 `break` 时就会终止。
 
-### Dynamically Sized Types and the `Sized` Trait
+### 动态大小类型与 `Sized` 特质
 
-Rust needs to know certain details about its types, such as how much space to
-allocate for a value of a particular type. This leaves one corner of its type
-system a little confusing at first: the concept of _dynamically sized types_.
-Sometimes referred to as _DSTs_ or _unsized types_, these types let us write
-code using values whose size we can know only at runtime.
+Rust 需要知道其类型的某些详细信息，比如为特定类型的值分配多少空间。这使得其类型系统的一个方面乍看之下有些令人困惑：*动态大小类型，dynamically sized types* 的概念。这些类型有时又被称为 DSTs 或 *未知大小类型，unsized types*，他们允许我们编写出，使用只有在运行时才知道其长度的值的代码。
 
-Let’s dig into the details of a dynamically sized type called `str`, which
-we’ve been using throughout the book. That’s right, not `&str`, but `str` on
-its own, is a DST. In many cases, such as when storing text entered by a user,
-we can’t know how long the string is until runtime. That means we can’t create
-a variable of type `str`, nor can we take an argument of type `str`. Consider
-the following code, which does not work:
+我们来深入探讨一下名为 `str` 的动态长度类型，我们在这整本书一直在使用他。没错，不是 `&str`，而是 `str` 本身就属于 DST。在许多情况下，比如存储用户输入的文本时，我们无法在运行时之前知道字符串的长度。这意味着我们既不能创建 `str` 类型的变量，也不能取 `str` 类型的参数。请考虑以下代码，他无法正常运行：
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-11-cant-create-str/src/main.rs:here}}
 ```
 
-Rust needs to know how much memory to allocate for any value of a particular
-type, and all values of a type must use the same amount of memory. If Rust
-allowed us to write this code, these two `str` values would need to take up the
-same amount of space. But they have different lengths: `s1` needs 12 bytes of
-storage and `s2` needs 15. This is why it’s not possible to create a variable
-holding a dynamically sized type.
+Rust 需要知道为特定类型的任何值分配多少内存，且一种类型的所有值都必须使用同样数量的内存。若 Rust 允许我们编写这段代码，那么这两个 `str` 值将需要占用相同数量的空间。但他们有着不同长度：`s1` 需要 15 字节的存储，而 `s2` 需要 24 字节。这就是为什么无法创建保存动态长度类型值的变量的原因。
 
-So, what do we do? In this case, you already know the answer: We make the type
-of `s1` and `s2` string slice (`&str`) rather than `str`. Recall from the
-[“String Slices”][string-slices]<!-- ignore --> section in Chapter 4 that the
-slice data structure only stores the starting position and the length of the
-slice. So, although `&T` is a single value that stores the memory address of
-where the `T` is located, a string slice is _two_ values: the address of the
-`str` and its length. As such, we can know the size of a string slice value at
-compile time: It’s twice the length of a `usize`. That is, we always know the
-size of a string slice, no matter how long the string it refers to is. In
-general, this is the way in which dynamically sized types are used in Rust:
-They have an extra bit of metadata that stores the size of the dynamic
-information. The golden rule of dynamically sized types is that we must always
-put values of dynamically sized types behind a pointer of some kind.
+那么，我们该怎么办？在这种情况下，咱们已经知道答案了：我们构造 `s1` 和 `s2` 的类型为 `&str`，而不是 `str`。回顾第 4 章中 [“String Slices”][string-slices] 小节，切片数据结构仅存储切片的起始位置和长度。因此，尽管 `&T` 属于存储 `T` 所在内存地址的单个值，但字符串切片则是 *两个* 值：`str` 的地址与其长度。正因如此，我们可以在编译时知道字符串切片值的长度： 他是 `usize` 长度的两倍。也就是说，我们始终知道字符串切片的长度，无论他引用的字符串有多长。一般来说，Rust 中动态长度类型的使用方式是这样的：他们有着额外的元数据，存储动态信息的长度。动态长度类型的黄金法则是，我们必须始终将动态长度类型的值放在某种指针之后。 <!-- ignore -->
 
-We can combine `str` with all kinds of pointers: for example, `Box<str>` or
-`Rc<str>`. In fact, you’ve seen this before but with a different dynamically
-sized type: traits. Every trait is a dynamically sized type we can refer to by
-using the name of the trait. In the [“Using Trait Objects to Abstract over
-Shared Behavior”][using-trait-objects-to-abstract-over-shared-behavior]<!--
-ignore --> section in Chapter 18, we mentioned that to use traits as trait
-objects, we must put them behind a pointer, such as `&dyn Trait` or `Box<dyn
-Trait>` (`Rc<dyn Trait>` would work too).
+我们可以将 `str` 与各种类别的指针结合：例如 `Box<str>` 或 `Rc<str>`。事实上，咱们之前已经见过这种情况，只不过以一种不同的动态长度类型：那便是特质。每个特质都属于动态长度类型，我们可以使用特质名字来引用它。在第 18 章中 [“使用特质对象抽象共享行为”][using-trait-objects-to-abstract-over-shared-behavior] 小节中，我们提到要将特质作为特质对象使用，就必须将其置于指针之后，比如 `&dyn Trait` 或 `Box<dyn
+Trait>`（`Rc<dyn Trait>` 也可以）。 <!--
+ignore -->
 
-To work with DSTs, Rust provides the `Sized` trait to determine whether or not
-a type’s size is known at compile time. This trait is automatically implemented
-for everything whose size is known at compile time. In addition, Rust
-implicitly adds a bound on `Sized` to every generic function. That is, a
-generic function definition like this:
+为了使用 DST，Rust 提供了 `Sized` 特质，来确定某种类型的长度是否在编译时已知。对于所有在编译时大小已知的类型，都会自动实现该特质。此外，Rust 会隐式地将一个 `Sized` 的边界添加到每个泛型函数。也就是说，像下面这样的一个泛型函数：
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-12-generic-fn-definition/src/lib.rs}}
 ```
 
-is actually treated as though we had written this:
+实际上会被视为我们写了这样一段代码：
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-13-generic-implicit-sized-bound/src/lib.rs}}
 ```
 
-By default, generic functions will work only on types that have a known size at
-compile time. However, you can use the following special syntax to relax this
-restriction:
+默认情况下，泛型函数仅适用于编译时已知大小的类型。但是，咱们可以使用以下特殊语法来放宽这一限制：
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch20-advanced-features/no-listing-14-generic-maybe-sized/src/lib.rs}}
 ```
 
-A trait bound on `?Sized` means “`T` may or may not be `Sized`,” and this
-notation overrides the default that generic types must have a known size at
-compile time. The `?Trait` syntax with this meaning is only available for
-`Sized`, not any other traits.
+`?Sized` 的特质边界，意味着 “`T` 可能属于 `Sized` 类型，也可能不属于”，这种写法覆盖了 “泛型类型必须在编译时具有已知大小” 的默认规则。具有这种含义的 `?Trait` 语法，仅适用于 `Sized`，不适用于其他任何特质。
 
-Also note that we switched the type of the `t` parameter from `T` to `&T`.
-Because the type might not be `Sized`, we need to use it behind some kind of
-pointer. In this case, we’ve chosen a reference.
+另请注意，我们将参数 `t` 的类型从 `T` 改为 `&T`。由于该类型可能不是 `Sized`，我们需要在某种指针之后使用他。在这种情况下，我们选择了引用。
 
-Next, we’ll talk about functions and closures!
+接下来，咱们将讨论函数和闭包！
 
 [encapsulation-that-hides-implementation-details]: ch18-01-what-is-oo.html#encapsulation-that-hides-implementation-details
 [string-slices]: ch04-03-slices.html#string-slices

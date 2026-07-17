@@ -1,206 +1,194 @@
-## Appendix B: Operators and Symbols
+## 附录 B：运算符与符号
 
-This appendix contains a glossary of Rust’s syntax, including operators and
-other symbols that appear by themselves or in the context of paths, generics,
-trait bounds, macros, attributes, comments, tuples, and brackets.
+这一附录包含 Rust 语法的词汇表，包括单独出现，或出现在路径、泛型、特质边界、宏、属性、注释、元组即方括号等上下文中的运算符和其他符号。
 
-### Operators
+### 运算符
 
-Table B-1 contains the operators in Rust, an example of how the operator would
-appear in context, a short explanation, and whether that operator is
-overloadable. If an operator is overloadable, the relevant trait to use to
-overload that operator is listed.
+下表 B-1 包含 Rust 中的运算符、该运算符在上下文中出现方式的示例、简短说明，以及该运算符是否可重载。当运算符可重载时，则会列出用于重载该运算符的相关特质。
 
-<span class="caption">Table B-1: Operators</span>
+**表 B-1**：运算符
 
-| Operator                  | Example                                                 | Explanation                                                           | Overloadable?  |
-| ------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------- | -------------- |
-| `!`                       | `ident!(...)`, `ident!{...}`, `ident![...]`             | Macro expansion                                                       |                |
-| `!`                       | `!expr`                                                 | Bitwise or logical complement                                         | `Not`          |
-| `!=`                      | `expr != expr`                                          | Nonequality comparison                                                | `PartialEq`    |
-| `%`                       | `expr % expr`                                           | Arithmetic remainder                                                  | `Rem`          |
-| `%=`                      | `var %= expr`                                           | Arithmetic remainder and assignment                                   | `RemAssign`    |
-| `&`                       | `&expr`, `&mut expr`                                    | Borrow                                                                |                |
-| `&`                       | `&type`, `&mut type`, `&'a type`, `&'a mut type`        | Borrowed pointer type                                                 |                |
-| `&`                       | `expr & expr`                                           | Bitwise AND                                                           | `BitAnd`       |
-| `&=`                      | `var &= expr`                                           | Bitwise AND and assignment                                            | `BitAndAssign` |
-| `&&`                      | `expr && expr`                                          | Short-circuiting logical AND                                          |                |
-| `*`                       | `expr * expr`                                           | Arithmetic multiplication                                             | `Mul`          |
-| `*=`                      | `var *= expr`                                           | Arithmetic multiplication and assignment                              | `MulAssign`    |
-| `*`                       | `*expr`                                                 | Dereference                                                           | `Deref`        |
-| `*`                       | `*const type`, `*mut type`                              | Raw pointer                                                           |                |
-| `+`                       | `trait + trait`, `'a + trait`                           | Compound type constraint                                              |                |
-| `+`                       | `expr + expr`                                           | Arithmetic addition                                                   | `Add`          |
-| `+=`                      | `var += expr`                                           | Arithmetic addition and assignment                                    | `AddAssign`    |
-| `,`                       | `expr, expr`                                            | Argument and element separator                                        |                |
-| `-`                       | `- expr`                                                | Arithmetic negation                                                   | `Neg`          |
-| `-`                       | `expr - expr`                                           | Arithmetic subtraction                                                | `Sub`          |
-| `-=`                      | `var -= expr`                                           | Arithmetic subtraction and assignment                                 | `SubAssign`    |
-| `->`                      | `fn(...) -> type`, <code>&vert;...&vert; -> type</code> | Function and closure return type                                      |                |
-| `.`                       | `expr.ident`                                            | Field access                                                          |                |
-| `.`                       | `expr.ident(expr, ...)`                                 | Method call                                                           |                |
-| `.`                       | `expr.0`, `expr.1`, and so on                           | Tuple indexing                                                        |                |
-| `..`                      | `..`, `expr..`, `..expr`, `expr..expr`                  | Right-exclusive range literal                                         | `PartialOrd`   |
-| `..=`                     | `..=expr`, `expr..=expr`                                | Right-inclusive range literal                                         | `PartialOrd`   |
-| `..`                      | `..expr`                                                | Struct literal update syntax                                          |                |
-| `..`                      | `variant(x, ..)`, `struct_type { x, .. }`               | “And the rest” pattern binding                                        |                |
-| `...`                     | `expr...expr`                                           | (Deprecated, use `..=` instead) In a pattern: inclusive range pattern |                |
-| `/`                       | `expr / expr`                                           | Arithmetic division                                                   | `Div`          |
-| `/=`                      | `var /= expr`                                           | Arithmetic division and assignment                                    | `DivAssign`    |
-| `:`                       | `pat: type`, `ident: type`                              | Constraints                                                           |                |
-| `:`                       | `ident: expr`                                           | Struct field initializer                                              |                |
-| `:`                       | `'a: loop {...}`                                        | Loop label                                                            |                |
-| `;`                       | `expr;`                                                 | Statement and item terminator                                         |                |
-| `;`                       | `[...; len]`                                            | Part of fixed-size array syntax                                       |                |
-| `<<`                      | `expr << expr`                                          | Left-shift                                                            | `Shl`          |
-| `<<=`                     | `var <<= expr`                                          | Left-shift and assignment                                             | `ShlAssign`    |
-| `<`                       | `expr < expr`                                           | Less than comparison                                                  | `PartialOrd`   |
-| `<=`                      | `expr <= expr`                                          | Less than or equal to comparison                                      | `PartialOrd`   |
-| `=`                       | `var = expr`, `ident = type`                            | Assignment/equivalence                                                |                |
-| `==`                      | `expr == expr`                                          | Equality comparison                                                   | `PartialEq`    |
-| `=>`                      | `pat => expr`                                           | Part of match arm syntax                                              |                |
-| `>`                       | `expr > expr`                                           | Greater than comparison                                               | `PartialOrd`   |
-| `>=`                      | `expr >= expr`                                          | Greater than or equal to comparison                                   | `PartialOrd`   |
-| `>>`                      | `expr >> expr`                                          | Right-shift                                                           | `Shr`          |
-| `>>=`                     | `var >>= expr`                                          | Right-shift and assignment                                            | `ShrAssign`    |
-| `@`                       | `ident @ pat`                                           | Pattern binding                                                       |                |
-| `^`                       | `expr ^ expr`                                           | Bitwise exclusive OR                                                  | `BitXor`       |
-| `^=`                      | `var ^= expr`                                           | Bitwise exclusive OR and assignment                                   | `BitXorAssign` |
-| <code>&vert;</code>       | <code>pat &vert; pat</code>                             | Pattern alternatives                                                  |                |
-| <code>&vert;</code>       | <code>expr &vert; expr</code>                           | Bitwise OR                                                            | `BitOr`        |
-| <code>&vert;=</code>      | <code>var &vert;= expr</code>                           | Bitwise OR and assignment                                             | `BitOrAssign`  |
-| <code>&vert;&vert;</code> | <code>expr &vert;&vert; expr</code>                     | Short-circuiting logical OR                                           |                |
-| `?`                       | `expr?`                                                 | Error propagation                                                     |                |
+| 运算符 | 示例 | 说明 | 是否可重载？ |
+| :- | :- | :- | :- |
+| `!` | `ident!(...)`, `ident!{...}`, `ident![...]` | 宏扩展 |   |
+| `!` | `!expr` | 按位或，或逻辑求补 | 否 |
+| `Not` | `!=` | 不等的比较 | `expr != expr` |
+| `PartialEq` | `%` | 算术求余 | `expr % expr` |
+| `Rem` | `%=` | 算术求余并赋值 | `var %= expr` |
+| `RemAssign` | `&`, `&expr` | 借用 |  |
+| `&mut expr` | `&`, `&type`, `&mut type`, `&'a type` | 借用指针类型 |  |
+| `&'a mut type` | `&` | 按位与 `expr & expr` | `BitAnd` |
+| `&=` | `var &= expr` | 按位与 `BitAndAssign` 并赋值 | `&&` |
+| `expr && expr` | `*` | 短路的逻辑与 `expr * expr` 运算，short-circuit logical AND |  |
+| `Mul` | `*=` | 算术乘法 | `var *= expr` |
+| `MulAssign` | `*` | 算术乘法并赋值 | `*expr` |
+| `Deref` | `*` | 解引用 | `*const type` |
+| `*mut type` | `+`, `trait + trait` | 原始指针 |  |
+| `'a + trait` | `+`, `expr + expr` | 复合类型的约束 |  |
+| `Add` | `+=` | 算术加法 | `var += expr` |
+| `AddAssign` | `,` | 算术加法并赋值 | `expr, expr` |
+| `-` | `- expr` | 参数和元素的分隔符 |  |
+| `Neg` | `-` | 算术取反运算 | `expr - expr` |
+| `Sub` | `-=` | 算术减法 | `var -= expr` |
+| `SubAssign` | `->` | 算术减法并赋值 | `fn(...) -> type` |
+| `.` | `expr.ident`, <code>&vert;...&vert; -> type</code> | 函数与闭包的返回类型 |  |
+| `.` | `expr.ident(expr, ...)` | 字段访问 |  |
+| `.` | `expr.0` | 方法调用 |  |
+| `expr.1` | `..`, `..` 等等 | 元组索引 |  |
+| `expr..` | `..expr`, `expr..expr`, `PartialOrd`, `..=` | 右边界范围字面值 | `..=expr` |
+| `expr..=expr` | `PartialOrd`, `..` | 包含右侧的范围字面值 | `..expr` |
+| `..` | `variant(x, ..)` | 结构体字面值更新语法 |  |
+| `struct_type { x, .. }` | `...` | （已弃用，请改用 `expr...expr`）在模式中：包含范围模式 |  |
+| `..=` | `/` | 算术除法 | `expr / expr` |
+| `Div` | `/=` | 算术除法并赋值 | `var /= expr` |
+| `DivAssign` | `:`, `pat: type` | 约束，限制条件 |  |
+| `ident: type` | `:` | 结构体字段初始化器 |  |
+| `ident: expr` | `:` | 循环标签 |  |
+| `'a: loop {...}` | `;` | 语句及项目的终止符 |  |
+| `expr;` | `;` | 固定长度数组语法的一部分 |  |
+| `[...; len]` | `<<` | 向左移位 | `expr << expr` |
+| `Shl` | `<<=` | 向左移位并赋值 | `var <<= expr` |
+| `ShlAssign` | `<` | 小于比较 | `expr < expr` |
+| `PartialOrd` | `<=` | 小于等于比较 | `expr <= expr` |
+| `PartialOrd` | `=`, `var = expr` | 赋值/等价 |  |
+| `ident = type` | `==` | 相等性比较 | `expr == expr` |
+| `PartialEq` | `=>` | 匹配支臂语法的一部分 |  |
+| `pat => expr` | `>` | 大于比较 | `expr > expr` |
+| `PartialOrd` | `>=` | 大于等于比较 | `expr >= expr` |
+| `PartialOrd` | `>>` | 向右移位 | `expr >> expr` |
+| `Shr` | `>>=` | 向右移位并赋值 | `var >>= expr` |
+| `ShrAssign` | `@` | 模式绑定 |  |
+| `ident @ pat` | `^` | 按位异或 | `expr ^ expr` |
+| `BitXor` | `^=` | 按位异或并赋值 | `var ^= expr` |
+| <code>&vert;</code> | <code>pat &vert; pat</code> | 替代模式 | |
+| <code>&vert;</code> | <code>expr &vert; expr</code> | 按位或 `BitXorAssign`  | `BitOr` |
+| <code>&vert;=</code> | <code>var &vert;= expr</code> | 按位或`BitOrAssign` 并赋值 | `?` |
+| <code>&vert;&vert;</code> | <code>expr &vert;&vert; expr</code> | 短路的逻辑或 `expr?` | |
+| ? | expr? | 错误传播 |  |
 
-### Non-operator Symbols
+### 非运算符的符号
 
-The following tables contain all symbols that don’t function as operators; that
-is, they don’t behave like a function or method call.
+以下表格包含所有不用作运算符的符号；也就是说，他们的行为不像函数或方法调用。
 
-Table B-2 shows symbols that appear on their own and are valid in a variety of
-locations.
+下表 B-2 展示了单独出现且在多种位置都有效的符号。
 
-<span class="caption">Table B-2: Stand-alone Syntax</span>
+**表 B-2**：独立语法，Stand-Alone Syntax
 
-| Symbol                                                                 | Explanation                                                            |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `'ident`                                                               | Named lifetime or loop label                                           |
-| Digits immediately followed by `u8`, `i32`, `f64`, `usize`, and so on  | Numeric literal of specific type                                       |
-| `"..."`                                                                | String literal                                                         |
-| `r"..."`, `r#"..."#`, `r##"..."##`, and so on                          | Raw string literal; escape characters not processed                    |
-| `b"..."`                                                               | Byte string literal; constructs an array of bytes instead of a string  |
-| `br"..."`, `br#"..."#`, `br##"..."##`, and so on                       | Raw byte string literal; combination of raw and byte string literal    |
-| `'...'`                                                                | Character literal                                                      |
-| `b'...'`                                                               | ASCII byte literal                                                     |
-| <code>&vert;...&vert; expr</code>                                      | Closure                                                                |
-| `!`                                                                    | Always-empty bottom type for diverging functions                       |
-| `_`                                                                    | “Ignored” pattern binding; also used to make integer literals readable |
+| 符号 | 说明 |
+| :--- | :--- |
+| `'ident` | 命名的生命周期或循环标签 |
+| 紧跟在数字后面的 `u8`、`i32`、`f64`、`usize` 等 | 指定类型的数字字面值 |
+| `"..."` | 字符串字面值 |
+| `r"..."`, `r#"..."#`, `r##"..."##` 等 | 原始字符串字面值，转义字符不会被处理 |
+| `b"..."` | 字节字符串字面值；构造出一个字节数组而非字符串 |
+| `br"..."`, `br#"..."#`, `br##"..."##` 等 | 原始字节字符串字面值；原始字节字符串字面值与字节字符串字面值的组合 |
+| `'...'` | 字符字面值 |
+| `b'...'` | ASCII 的字节字面值 |
+| <code>&vert;...&vert; expr</code> | 闭包 |
+| `!` | 用于发散函数的常空底部类型，always empty bottom type for diverging functions |
+| `_` | “忽略” 模式绑定；还用于使整数字面值可读。"Ignored" pattern binding; also used to make integer literals readable |
 
-Table B-3 shows symbols that appear in the context of a path through the module
-hierarchy to an item.
+下表 B-3 展示了在通过模组层次结构到某个项目的路径的上下文中出现的符号。
 
-<span class="caption">Table B-3: Path-Related Syntax</span>
+**表 B-3**：路径相关的语法
 
-| Symbol                                  | Explanation                                                                                                  |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------|
-| `ident::ident`                          | Namespace path                                                                                               |
-| `::path`                                | Path relative to the crate root (that is, an explicitly absolute path)                                       |
-| `self::path`                            | Path relative to the current module (that is, an explicitly relative path)                                   |
-| `super::path`                           | Path relative to the parent of the current module                                                            |
-| `type::ident`, `<type as trait>::ident` | Associated constants, functions, and types                                                                   |
-| `<type>::...`                           | Associated item for a type that cannot be directly named (for example, `<&T>::...`, `<[T]>::...`, and so on) |
-| `trait::method(...)`                    | Disambiguating a method call by naming the trait that defines it                                             |
-| `type::method(...)`                     | Disambiguating a method call by naming the type for which it’s defined                                       |
-| `<type as trait>::method(...)`          | Disambiguating a method call by naming the trait and type                                                    |
+| 符号 | 说明 |
+| :--- | :--- |
+| `ident::ident` | 命名空间路径 |
+| `::path` | 相对于代码箱根的路径（即显式的绝对路径） |
+| `self::path` | 相对于当前模组的路径（即显式的相对路径） |
+| `super::path` | 相对于当前模组的父模组的路径 |
+| `type::ident`, `<type as trait>::ident` | 关联的常量、函数及类型 |
+| `<type>::...` | 无法直接命名的类型的关联项目（例如，`<&T>::...`, `<[T]>::...` 等） |
+| `trait::method(...)` | 通过命名定义方法调用的特质来消除方法调用的歧义 |
+| `type::method(...)` | 通过命名定义方法调用的类型来消除方法调用的歧义 |
+| `<type as trait>::method(...)` | 通过命名特质和类型来消除方法调用的歧义 |
 
-Table B-4 shows symbols that appear in the context of using generic type
-parameters.
+下表 B-4 展示了在使用泛型类型参数的上下文出现的符号。
 
-<span class="caption">Table B-4: Generics</span>
+**表 B-4**：泛型
 
-| Symbol                         | Explanation                                                                                                                                         |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path<...>`                    | Specifies parameters to a generic type in a type (for example, `Vec<u8>`)                                                                           |
-| `path::<...>`, `method::<...>` | Specifies parameters to a generic type, function, or method in an expression; often referred to as _turbofish_ (for example, `"42".parse::<i32>()`) |
-| `fn ident<...> ...`            | Define generic function                                                                                                                             |
-| `struct ident<...> ...`        | Define generic structure                                                                                                                            |
-| `enum ident<...> ...`          | Define generic enumeration                                                                                                                          |
-| `impl<...> ...`                | Define generic implementation                                                                                                                       |
-| `for<...> type`                | Higher ranked lifetime bounds                                                                                                                       |
-| `type<ident=type>`             | A generic type where one or more associated types have specific assignments (for example, `Iterator<Item=T>`)                                       |
+| 符号 | 说明 |
+| :-- | :-- |
+| `path<...>` | 指定类型中泛型类型的参数（例如，`Vec<u8>`） |
+| `path::<...>`, `method::<...>` | 指定表达式中泛型类型、函数或方法的参数；通常成为 *涡轮鱼语法，turbofish*（例如，`"42".parse::<i32>()`，关于 Rust 的 turbofish 语法，请参考：What is Rust's turbofish，RUST 中的 turbofish 语法（一） ） |
+| `fn ident<...> ...` | 定义泛型的函数 |
+| `struct ident<...> ...` | 定义泛型的结构体 |
+| `enum ident<...> ...` | 定义泛型的枚举 |
+| `impl<...> ...` | 定义泛型的实现 |
+| `for<...> type` | 更高阶的生命周期边界，higher-ranked lifetime bounds |
+| `type<ident=type>` | 一种泛型类型，其中一个或多个关联类型有着特定的赋值（例如，`Iterator<Item=T>`） |
 
-Table B-5 shows symbols that appear in the context of constraining generic type
-parameters with trait bounds.
+下表 B-5 展示了在通过特质边界约束泛型类型参数的上下文出现的符号。
 
-<span class="caption">Table B-5: Trait Bound Constraints</span>
+**B-5**：特质边界约束
 
-| Symbol                        | Explanation                                                                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `T: U`                        | Generic parameter `T` constrained to types that implement `U`                                                                              |
-| `T: 'a`                       | Generic type `T` must outlive lifetime `'a` (meaning the type cannot transitively contain any references with lifetimes shorter than `'a`) |
-| `T: 'static`                  | Generic type `T` contains no borrowed references other than `'static` ones                                                                 |
-| `'b: 'a`                      | Generic lifetime `'b` must outlive lifetime `'a`                                                                                           |
-| `T: ?Sized`                   | Allow generic type parameter to be a dynamically sized type                                                                                |
-| `'a + trait`, `trait + trait` | Compound type constraint                                                                                                                   |
+| 符号 | 说明 |
+| :--- | :--- |
+| `T: U` | 泛型参数 `T` 被约束为实现 `U` 的类型 |
+| `T: 'a` | 泛型类型 `T` 的生命周期必须长于 `'a`（意味着该类型不能间接包含任何生命周期短于 `'a` 的引用） |
+| `T: 'static` | 除 `T` 的引用外，泛型类型 `'static` 不能包含任何借用的引用 |
+| `'b: 'a` | 泛型生命周期 `'b` 必须比 `'a` 的生命周期更长 |
+| `T: ?Sized` | 允许泛型类型参数为动态大小的类型 |
+| `'a + trait`, `trait + trait` | 复合类型约束 |
 
-Table B-6 shows symbols that appear in the context of calling or defining
-macros and specifying attributes on an item.
+下表 B-6 展示了在调用或定义宏，以及对项目指定属性的上下文中出现的符号。
 
-<span class="caption">Table B-6: Macros and Attributes</span>
+**B-6**：宏与属性
 
-| Symbol                                      | Explanation        |
-| ------------------------------------------- | ------------------ |
-| `#[meta]`                                   | Outer attribute    |
-| `#![meta]`                                  | Inner attribute    |
-| `$ident`                                    | Macro substitution |
-| `$ident:kind`                               | Macro metavariable |
-| `$(...)...`                                 | Macro repetition   |
-| `ident!(...)`, `ident!{...}`, `ident![...]` | Macro invocation   |
+| 符号 | 说明 |
+| :--- | :--- |
+| `#[meta]` | 外层属性 |
+| `#![meta]` | 内层熟悉 |
+| `$ident` | 宏代换 |
+| `$ident:kind` | 宏的元变量 |
+| `$(...)...` | 宏的重复 |
+| `ident!(...)`, `ident!{...}`, `ident![...]` | 宏调用 |
 
-Table B-7 shows symbols that create comments.
+下表 B-7 展示了创建注释的符号。
 
-<span class="caption">Table B-7: Comments</span>
+**表 B-7**：注释
 
-| Symbol     | Explanation             |
-| ---------- | ----------------------- |
-| `//`       | Line comment            |
-| `//!`      | Inner line doc comment  |
-| `///`      | Outer line doc comment  |
-| `/*...*/`  | Block comment           |
-| `/*!...*/` | Inner block doc comment |
-| `/**...*/` | Outer block doc comment |
+| 符号 | 说明 |
+| :--- | :--- |
+| `//` | 行注释 |
+| `//!` | 内层行文档注释 |
+| `///` | 外层行文档注释 |
+| `/*...*/` | 注释块 |
+| `/*!...*/` | 内层块文档注释 |
+| `/**...*/` | 外层块文档注释 |
 
-Table B-8 shows the contexts in which parentheses are used.
+下表 B-8 展示使用括号的上下文。
 
-<span class="caption">Table B-8: Parentheses</span>
+**表 B-8**：括号
 
-| Symbol                   | Explanation                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------- |
-| `()`                     | Empty tuple (aka unit), both literal and type                                               |
-| `(expr)`                 | Parenthesized expression                                                                    |
-| `(expr,)`                | Single-element tuple expression                                                             |
-| `(type,)`                | Single-element tuple type                                                                   |
-| `(expr, ...)`            | Tuple expression                                                                            |
-| `(type, ...)`            | Tuple type                                                                                  |
-| `expr(expr, ...)`        | Function call expression; also used to initialize tuple `struct`s and tuple `enum` variants |
+| 符号 | 说明 |
+| :--- | :--- |
+| `()` | 空元组（又叫单元值），包括字面值和类型 |
+| `(expr)` | 带括号的表达式 |
+| `(expr,)` | 单个元素的元组表达式 |
+| `(type,)` | 单个元素的元组类型 |
+| `(expr, ...)` | 元组表达式 |
+| `(type, ...)` | 元组类型 |
+| `expr(expr, ...)` | 函数调用表达式；还用于初始化元组的 `struct` 以及元组的 `enum` 变种 |
 
-Table B-9 shows the contexts in which curly brackets are used.
+下表 B-9 展示了使用花括号的上下文。
 
-<span class="caption">Table B-9: Curly Brackets</span>
+**表 B-9**：花括号
 
-| Context      | Explanation      |
-| ------------ | ---------------- |
-| `{...}`      | Block expression |
-| `Type {...}` | Struct literal   |
+| 符号 | 说明 |
+| :--- | :--- |
+| `{...}` | 代码块表达式 |
+| `Type {...}` | 结构体字面值 |
 
-Table B-10 shows the contexts in which square brackets are used.
+下表 B-10 展示了使用方括号的上下文。
 
-<span class="caption">Table B-10: Square Brackets</span>
+**表 B-10**：方括号
 
-| Context                                            | Explanation                                                                                                                   |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `[...]`                                            | Array literal                                                                                                                 |
-| `[expr; len]`                                      | Array literal containing `len` copies of `expr`                                                                               |
-| `[type; len]`                                      | Array type containing `len` instances of `type`                                                                               |
-| `expr[expr]`                                       | Collection indexing; overloadable (`Index`, `IndexMut`)                                                                       |
-| `expr[..]`, `expr[a..]`, `expr[..b]`, `expr[a..b]` | Collection indexing pretending to be collection slicing, using `Range`, `RangeFrom`, `RangeTo`, or `RangeFull` as the “index” |
+| 符号 | 说明 |
+| :--- | :--- |
+| `[...]` | 数组字面值 |
+| `[expr; len]` | 包含 `len` 个 `expr` 副本的数组字面值 |
+| `[type; len]` | 包含 `len` 个 `type` 实例的数组字面值 |
+| `expr[expr]` | 集合索引。可重载 `Index` |
+| `IndexMut`, `expr[..]`, `expr[a..]`, `expr[..b]` | 伪装成集合切片的集合索引，使用 `expr[a..b]`、`Range`、`RangeFrom` 或 `RangeTo` 作为 “索引” | `RangeFull`

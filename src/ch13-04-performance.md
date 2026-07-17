@@ -2,56 +2,31 @@
 
 <a id="comparing-performance-loops-vs-iterators"></a>
 
-## Performance in Loops vs. Iterators
+## 循环与迭代器下的性能问题
 
-To determine whether to use loops or iterators, you need to know which
-implementation is faster: the version of the `search` function with an explicit
-`for` loop or the version with iterators.
+要确定是使用循环还是迭代器，咱们需要知道哪种实现更快：带有显式 `search` 循环的 `for` 函数版本，还带有迭代器的版本。
 
-We ran a benchmark by loading the entire contents of _The Adventures of
-Sherlock Holmes_ by Sir Arthur Conan Doyle into a `String` and looking for the
-word _the_ in the contents. Here are the results of the benchmark on the
-version of `search` using the `for` loop and the version using iterators:
+我们通过加载 Arthur Conan Doyle 爵士所著的《福尔摩斯历险记》的全部内容到一个 `String` 中，然后在内容中查找单词 *the*，运行了一个基准测试。下面是该基准测试对使用 `search` 循环的 `for` 版本，和使用迭代器的版本的结果：
 
 ```text
 test bench_search_for  ... bench:  19,620,300 ns/iter (+/- 915,700)
 test bench_search_iter ... bench:  19,234,900 ns/iter (+/- 657,200)
 ```
 
-The two implementations have similar performance! We won’t explain the
-benchmark code here because the point is not to prove that the two versions
-are equivalent but to get a general sense of how these two implementations
-compare performance-wise.
+两种实现有着相似的性能！我们不会在这里解释基准测试的代码，因为重点不是证明两个版本等价，而是大致了解这两种实现在性能方面的比较情况。
 
-For a more comprehensive benchmark, you should check using various texts of
-various sizes as the `contents`, different words and words of different lengths
-as the `query`, and all kinds of other variations. The point is this:
-Iterators, although a high-level abstraction, get compiled down to roughly the
-same code as if you’d written the lower-level code yourself. Iterators are one
-of Rust’s _zero-cost abstractions_, by which we mean that using the abstraction
-imposes no additional runtime overhead. This is analogous to how Bjarne
-Stroustrup, the original designer and implementor of C++, defines
-zero-overhead in his 2012 ETAPS keynote presentation “Foundations of C++”:
+出于更全面的测试，咱们应该使用不同大小的各种文本作为 `contents`、不同长度的不同单词作为 `query`，以及所有类别的变量来检查。重点是：迭代器虽然属于高级抽象，仍会被编译成与咱们自己编写的低级（地层）代码大致相同的代码。迭代器属于 Rust 的 *零成本抽象* 之一，这意味着使用这一抽象不会带来额外的运行时开销。这类似于 C++ 最初设计者和实现者 Bjarne Stroustrup 在其 2012 年 ETAPS 的主题演讲 [《C++ 基础》] 中，对 “零开销” 的定义：
 
-> In general, C++ implementations obey the zero-overhead principle: What you
-> don’t use, you don’t pay for. And further: What you do use, you couldn’t hand
-> code any better.
+> 一般来说，C++ 的实现遵循“零开销”原则：不使用的东西，就不需要付出开销。更进一步：咱们真正用到的东西，咱们无法更好地手工编写代码，the zero-overhead principle: What you don't use, you don't pay for. And further: What you do use, you couldn't hand code any better。
 
-In many cases, Rust code using iterators compiles to the same assembly you’d
-write by hand. Optimizations such as loop unrolling and eliminating bounds
-checking on array access apply and make the resultant code extremely efficient.
-Now that you know this, you can use iterators and closures without fear! They
-make code seem like it’s higher level but don’t impose a runtime performance
-penalty for doing so.
+> **注意**：
+>
+> - zero-cost abstraction, 零成本抽象
 
-## Summary
+## 本章小结
 
-Closures and iterators are Rust features inspired by functional programming
-language ideas. They contribute to Rust’s capability to clearly express
-high-level ideas at low-level performance. The implementations of closures and
-iterators are such that runtime performance is not affected. This is part of
-Rust’s goal to strive to provide zero-cost abstractions.
+作为另一个示例，以下代码取自某个音频解码器。该解码算法使用线性预测数学运算，根据前几个采样值的线性函数来估计未来值。这段代码使用迭代器链，对作用域中的三个变量执行一些数学计算：
 
-Now that we’ve improved the expressiveness of our I/O project, let’s look at
-some more features of `cargo` that will help us share the project with the
-world.
+- 一个数据的 `cargo` 切片
+- 一个包含 12 个 coefficients 的数组
+- 以及 qlp_shift 中偏移数据的数量

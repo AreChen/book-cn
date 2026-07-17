@@ -1,59 +1,27 @@
-## Appendix E: Editions
+## 附录 E：关于版本
 
-In Chapter 1, you saw that `cargo new` adds a bit of metadata to your
-_Cargo.toml_ file about an edition. This appendix talks about what that means!
+在第 1 章中，咱们看到 `cargo new` 添加一些有关版本的元数据到咱们的 Cargo.toml 文件。这一附录讲述了这意味着什么！
 
-The Rust language and compiler have a six-week release cycle, meaning users get
-a constant stream of new features. Other programming languages release larger
-changes less often; Rust releases smaller updates more frequently. After a
-while, all of these tiny changes add up. But from release to release, it can be
-difficult to look back and say, “Wow, between Rust 1.10 and Rust 1.31, Rust has
-changed a lot!”
+Rust 语言和编译器有六周的发布周期，这意味着用户会获得源源不断的新功能。其他编程语言发布大更新的频率较低；而 Rust 则更频繁地发布较小的更新。久而久之，所有这些微小的变化就会累积起来。但从这些发布来看，很难回头感叹：“哇，从 Rust 1.10 到 1.31，Rust 真的变化巨大！”。
 
-Every three years or so, the Rust team produces a new Rust _edition_. Each
-edition brings together the features that have landed into a clear package with
-fully updated documentation and tooling. New editions ship as part of the usual
-six-week release process.
+大约每两三年，Rust 团队就会制作一个新的 Rust *版本*。每个版本都会整合那些已实现的特性到一个清晰的包中，并附带全面更新后的文档和工具。新版本会作为通常的六周发布过程的一部分发布。
 
-Editions serve different purposes for different people:
+版本对不同的人有不同的用途：
 
-- For active Rust users, a new edition brings together incremental changes into
-  an easy-to-understand package.
-- For non-users, a new edition signals that some major advancements have
-  landed, which might make Rust worth another look.
-- For those developing Rust, a new edition provides a rallying point for the
-  project as a whole.
+- 对于活跃的 Rust 用户而言，新版本整合增量变更到一个易于理解的包中；
+- 对于非用户而言，新版本标志着一些重大进展已经落地，这可能会让 Rust 值得再次关注；
+- 对于 Rust 开发者而言，新版本为整个项目提供了凝聚共识的契机。
 
-At the time of this writing, four Rust editions are available: Rust 2015, Rust
-2018, Rust 2021, and Rust 2024. This book is written using Rust 2024 edition
-idioms.
+在撰写本文时，共有四个 Rust 版本可用：Rust 2015、Rust 2018、Rust 2021 和 Rust 2024。本书使用 Rust 2024 版本的惯用语编写。
 
-The `edition` key in _Cargo.toml_ indicates which edition the compiler should
-use for your code. If the key doesn’t exist, Rust uses `2015` as the edition
-value for backward compatibility reasons.
+`edition` 中的 `2015` 键表明编译器应对咱们的代码使用的版本。当该键不存在时，出于向后兼容性的原因，Rust 会使用 2015 作为版本值。
 
-Each project can opt in to an edition other than the default 2015 edition.
-Editions can contain incompatible changes, such as including a new keyword that
-conflicts with identifiers in code. However, unless you opt in to those
-changes, your code will continue to compile even as you upgrade the Rust
-compiler version you use.
+每个项目都可以选择默认 2015 版本以外的版本。不同版本可能包含不兼容的变更，例如包含与代码中标识符冲突的新关键字。但是，除非咱们选择接受这些变更，否则即使升级咱们使用的 Rust 编译器版本，咱们的代码仍将继续编译。
 
-All Rust compiler versions support any edition that existed prior to that
-compiler’s release, and they can link crates of any supported editions
-together. Edition changes only affect the way the compiler initially parses
-code. Therefore, if you’re using Rust 2015 and one of your dependencies uses
-Rust 2018, your project will compile and be able to use that dependency. The
-opposite situation, where your project uses Rust 2018 and a dependency uses
-Rust 2015, works as well.
+所有 Rust 编译器版本都支持该编译器发布（版本）之前存在的任何版本，并且他们可以将任何受支持版本的代码箱连接起来。版本变更仅影响编译器最初解析代码的方式。因此，当咱们使用 Rust 2015，而咱们的依赖之一使用 Rust 2018 时，咱们的项目将编译，并能够使用该依赖项。反之，当咱们的项目使用 Rust 2018，而依赖项使用 Rust 2015 时，同样也能正常工作。
 
-To be clear: Most features will be available on all editions. Developers using
-any Rust edition will continue to see improvements as new stable releases are
-made. However, in some cases, mainly when new keywords are added, some new
-features might only be available in later editions. You will need to switch
-editions if you want to take advantage of such features.
+需要说明的是：大多数特性都将在所有版本中可用。随着新的稳定版本的发布，使用任何 Rust 版本的开发者都将持续获得改进。但在某些情况下，主要是在新增关键字时，某些新特性可能仅在后续版本中可用。当咱们希望使用这些新特性时，则需要切换版本。
 
-For more details, see [_The Rust Edition Guide_][edition-guide]. This is a
-complete book that enumerates the differences between editions and explains how
-to automatically upgrade your code to a new edition via `cargo fix`.
+有关更多详细信息，请参阅 [_The Rust Edition Guide_][edition-guide]，这是一本内容全面的指南，详细列举版本之间的差异，并解释了怎样通过 `cargo fix` 自动将代码升级新版本。
 
 [edition-guide]: https://doc.rust-lang.org/stable/edition-guide

@@ -1,14 +1,10 @@
-# Using Structs to Structure Related Data
+# 使用结构体组织相关数据
 
-A _struct_, or _structure_, is a custom data type that lets you package
-together and name multiple related values that make up a meaningful group. If
-you’re familiar with an object-oriented language, a struct is like an object’s
-data attributes. In this chapter, we’ll compare and contrast tuples with
-structs to build on what you already know and demonstrate when structs are a
-better way to group data.
+_结构体（struct）_或称_结构（structure）_是一种自定义数据类型，可以将构成
+有意义群组的多个相关值组合在一起并为它们命名。如果你熟悉面向对象语言，
+结构体就像对象的数据属性。本章会比较元组和结构体的异同，在已有知识的
+基础上说明什么时候结构体是组织数据的更好方式。
 
-We’ll demonstrate how to define and instantiate structs. We’ll discuss how to
-define associated functions, especially the kind of associated functions called
-_methods_, to specify behavior associated with a struct type. Structs and enums
-(discussed in Chapter 6) are the building blocks for creating new types in your
-program’s domain to take full advantage of Rust’s compile-time type checking.
+我们会展示如何定义和实例化结构体。还会讨论如何定义关联函数，尤其是称为
+_方法_的关联函数，以指定与结构体类型相关的行为。结构体和枚举（第 6 章
+讨论）是程序领域中创建新类型的基础，可以充分利用 Rust 的编译时类型检查。

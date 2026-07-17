@@ -1,190 +1,158 @@
-## Variables and Mutability
+## 变量与可变性
 
-As mentioned in the [“Storing Values with
-Variables”][storing-values-with-variables]<!-- ignore --> section, by default,
-variables are immutable. This is one of many nudges Rust gives you to write
-your code in a way that takes advantage of the safety and easy concurrency that
-Rust offers. However, you still have the option to make your variables mutable.
-Let’s explore how and why Rust encourages you to favor immutability and why
-sometimes you might want to opt out.
+如[“用变量存储值”][storing-values-with-variables]<!-- ignore --> 一节所述，
+变量默认是不可变的。这是 Rust 引导你编写代码、利用其安全性和易于实现
+并发性的诸多方式之一。不过，你仍然可以选择让变量可变。下面来探讨 Rust
+为何鼓励你优先使用不可变性，以及有时为什么需要选择可变变量。
 
-When a variable is immutable, once a value is bound to a name, you can’t change
-that value. To illustrate this, generate a new project called _variables_ in
-your _projects_ directory by using `cargo new variables`.
+变量不可变时，一旦将值绑定到名称上，就不能再改变该值。为了说明这一点，
+使用 `cargo new variables` 在 _projects_ 目录中创建一个名为 _variables_ 的
+新项目。
 
-Then, in your new _variables_ directory, open _src/main.rs_ and replace its
-code with the following code, which won’t compile just yet:
+然后在新的 _variables_ 目录中打开 _src/main.rs_，将其中的代码替换为下面
+的代码；这段代码暂时还无法编译：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-01-variables-are-immutable/src/main.rs}}
 ```
 
-Save and run the program using `cargo run`. You should receive an error message
-regarding an immutability error, as shown in this output:
+保存并使用 `cargo run` 运行这个程序。你应会收到一条有关不可变性的错误
+消息，如下面的输出所示：
 
 ```console
 {{#include ../listings/ch03-common-programming-concepts/no-listing-01-variables-are-immutable/output.txt}}
 ```
 
-This example shows how the compiler helps you find errors in your programs.
-Compiler errors can be frustrating, but really they only mean your program
-isn’t safely doing what you want it to do yet; they do _not_ mean that you’re
-not a good programmer! Experienced Rustaceans still get compiler errors.
+这个例子展示了编译器如何帮助你发现程序中的错误。编译错误可能令人沮丧，
+但它们真正表示的只是：你的程序还没有安全地完成你想让它完成的事情；这
+并不意味着你不是一个优秀的程序员！经验丰富的 Rustacean 也会遇到编译错误。
 
-You received the error message `` cannot assign twice to immutable variable `x` `` because you tried to assign a second value to the immutable `x` variable.
+你收到了错误消息 `` cannot assign twice to immutable variable `x` ``，这是因为尝试给不可变的 `x` 变量赋第二个值。
 
-It’s important that we get compile-time errors when we attempt to change a
-value that’s designated as immutable, because this very situation can lead to
-bugs. If one part of our code operates on the assumption that a value will
-never change and another part of our code changes that value, it’s possible
-that the first part of the code won’t do what it was designed to do. The cause
-of this kind of bug can be difficult to track down after the fact, especially
-when the second piece of code changes the value only _sometimes_. The Rust
-compiler guarantees that when you state that a value won’t change, it really
-won’t change, so you don’t have to keep track of it yourself. Your code is thus
-easier to reason through.
+当我们尝试改变标记为不可变的值时，在编译时得到错误非常重要，因为这种情况
+可能导致 bug。如果代码的一部分假设某个值永远不会改变，而代码的另一部分却
+改变了这个值，那么第一部分代码就可能无法按设计运行。这类 bug 的原因在事后
+很难追踪，尤其是在第二段代码只在某些时候改变值的情况下。Rust 编译器保证：
+当你声明某个值不会改变时，它确实不会改变，因此你不必自己跟踪这一点。这样，
+代码也更容易理解。
 
-But mutability can be very useful and can make code more convenient to write.
-Although variables are immutable by default, you can make them mutable by
-adding `mut` in front of the variable name as you did in [Chapter
-2][storing-values-with-variables]<!-- ignore -->. Adding `mut` also conveys
-intent to future readers of the code by indicating that other parts of the code
-will be changing this variable’s value.
+不过，可变性有时非常有用，也能让代码更容易编写。虽然变量默认不可变，但你
+可以像[第 2 章][storing-values-with-variables]<!-- ignore --> 中那样，在变量名
+前添加 `mut` 使变量可变。添加 `mut` 还向未来阅读代码的人传达了意图，说明
+代码的其他部分会改变这个变量的值。
 
-For example, let’s change _src/main.rs_ to the following:
+例如，将 _src/main.rs_ 修改为下面这样：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust
 {{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-02-adding-mut/src/main.rs}}
 ```
 
-When we run the program now, we get this:
+在我们现在运行这个程序时，就会得到下面这样：
 
 ```console
 {{#include ../listings/ch03-common-programming-concepts/no-listing-02-adding-mut/output.txt}}
 ```
 
-We’re allowed to change the value bound to `x` from `5` to `6` when `mut` is
-used. Ultimately, deciding whether to use mutability or not is up to you and
-depends on what you think is clearest in that particular situation.
+使用 `x` 后，我们可以把绑定到 `5` 的值从 `6` 改为 `mut`。最终是否使用
+可变性取决于你自己，以及在特定情况下哪种写法最清晰。
 
 <!-- Old headings. Do not remove or links may break. -->
 <a id="constants"></a>
 
-### Declaring Constants
+### 声明常量
 
-Like immutable variables, _constants_ are values that are bound to a name and
-are not allowed to change, but there are a few differences between constants
-and variables.
+和不可变变量一样，_常量_也是绑定到名称且不允许改变的值，但常量与变量
+之间存在一些差异。
 
-First, you aren’t allowed to use `mut` with constants. Constants aren’t just
-immutable by default—they’re always immutable. You declare constants using the
-`const` keyword instead of the `let` keyword, and the type of the value _must_
-be annotated. We’ll cover types and type annotations in the next section,
-[“Data Types”][data-types]<!-- ignore -->, so don’t worry about the details
-right now. Just know that you must always annotate the type.
+首先，不能对常量使用 `mut`。常量不只是默认不可变——它们始终不可变。
+声明常量时要使用 `const` 关键字，而不是 `let` 关键字，并且值的类型_必须_
+标注。下一节[“数据类型”][data-types]<!-- ignore --> 会介绍类型和类型标注，
+现在不用担心细节。只需记住，常量总是必须标注类型。
 
-Constants can be declared in any scope, including the global scope, which makes
-them useful for values that many parts of code need to know about.
+常量可以在任意作用域中声明，包括全局作用域，因此适合表示代码许多部分
+都需要知道的值。
 
-The last difference is that constants may be set only to a constant expression,
-not the result of a value that could only be computed at runtime.
+最后一个差异是，常量只能被设置为常量表达式，不能设置为只能在运行时
+计算出的值。
 
-Here’s an example of a constant declaration:
+下面是声明常量的例子：
 
 ```rust
 const THREE_HOURS_IN_SECONDS: u32 = 60 * 60 * 3;
 ```
 
-The constant’s name is `THREE_HOURS_IN_SECONDS`, and its value is set to the
-result of multiplying 60 (the number of seconds in a minute) by 60 (the number
-of minutes in an hour) by 3 (the number of hours we want to count in this
-program). Rust’s naming convention for constants is to use all uppercase with
-underscores between words. The compiler is able to evaluate a limited set of
-operations at compile time, which lets us choose to write out this value in a
-way that’s easier to understand and verify, rather than setting this constant
-to the value 10,800. See the [Rust Reference’s section on constant
-evaluation][const-eval] for more information on what operations can be used
-when declaring constants.
+常量的名称是 `THREE_HOURS_IN_SECONDS`，其值是将 60（一分钟的秒数）乘以
+60（一小时的分钟数）再乘以 3（本程序想要计算的小时数）得到的结果。
+Rust 对常量的命名惯例是全部使用大写字母，并在单词之间使用下划线。编译
+器能够在编译时计算一组有限的操作，因此我们可以用更容易理解和验证的
+方式写出这个值，而不是直接把常量设置为 10,800。有关声明常量时可以
+使用哪些操作的更多信息，请参阅 [Rust Reference 关于常量求值的章节][const-eval]。
 
-Constants are valid for the entire time a program runs, within the scope in
-which they were declared. This property makes constants useful for values in
-your application domain that multiple parts of the program might need to know
-about, such as the maximum number of points any player of a game is allowed to
-earn, or the speed of light.
+常量在程序运行的整个期间内、其声明所在的作用域中都有效。这一特性使
+常量适合表示应用领域中程序多个部分可能需要知道的值，例如游戏中玩家
+允许获得的最高分，或光速。
 
-Naming hardcoded values used throughout your program as constants is useful in
-conveying the meaning of that value to future maintainers of the code. It also
-helps to have only one place in your code that you would need to change if the
-hardcoded value needed to be updated in the future.
+将程序中到处使用的硬编码值命名为常量，有助于向未来维护代码的人传达该
+值的含义。如果将来需要更新硬编码值，也只需修改代码中的一个地方。
 
-### Shadowing
+### 遮蔽
 
-As you saw in the guessing game tutorial in [Chapter
-2][comparing-the-guess-to-the-secret-number]<!-- ignore -->, you can declare a
-new variable with the same name as a previous variable. Rustaceans say that the
-first variable is _shadowed_ by the second, which means that the second
-variable is what the compiler will see when you use the name of the variable.
-In effect, the second variable overshadows the first, taking any uses of the
-variable name to itself until either it itself is shadowed or the scope ends.
-We can shadow a variable by using the same variable’s name and repeating the
-use of the `let` keyword as follows:
+正如你在[第 2 章][comparing-the-guess-to-the-secret-number]<!-- ignore --> 的
+猜数游戏教程中看到的，可以声明一个与之前变量同名的新变量。Rustacean
+称第一个变量被第二个变量_遮蔽_，这意味着当你使用该变量名时，编译器看到
+的是第二个变量。实际上，第二个变量会覆盖第一个变量，接管对该变量名
+的所有使用，直到它自身再次被遮蔽或作用域结束。我们可以使用相同的变量
+名，并重复使用 `let` 关键字来遮蔽变量，如下所示：
 
-<span class="filename">Filename: src/main.rs</span>
+<span class="filename">文件名： src/main.rs</span>
 
 ```rust
 {{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-03-shadowing/src/main.rs}}
 ```
 
-This program first binds `x` to a value of `5`. Then, it creates a new variable
-`x` by repeating `let x =`, taking the original value and adding `1` so that
-the value of `x` is `6`. Then, within an inner scope created with the curly
-brackets, the third `let` statement also shadows `x` and creates a new
-variable, multiplying the previous value by `2` to give `x` a value of `12`.
-When that scope is over, the inner shadowing ends and `x` returns to being `6`.
-When we run this program, it will output the following:
+这个程序首先将 `x` 绑定到值 `5`。然后，它创建一个新变量 `x`，通过重复使用 `let x =`
+一个新变量，取原来的值并加上 `1`，因此 `x` 的值为 `6`。接着，在由大
+括号创建的内层作用域中，第三个 `let` 语句再次遮蔽 `x`，创建一个新变量，
+将先前的值乘以 `2`，使 `x` 的值为 `12`。当该作用域结束时，内部的遮蔽
+也结束了，`x` 恢复为 `6`。运行这个程序时，它会输出以下内容：
 
 ```console
 {{#include ../listings/ch03-common-programming-concepts/no-listing-03-shadowing/output.txt}}
 ```
+遮蔽不同于将变量声明为 `mut`。如果我们不小心在没有使用 `let` 关键字的
+情况下尝试给这个变量重新赋值，就会得到编译时错误。而使用 `let` 关键字，
+我们可以对某个值执行一些变换，并在变换完成后让该变量不可变。
 
-Shadowing is different from marking a variable as `mut` because we’ll get a
-compile-time error if we accidentally try to reassign to this variable without
-using the `let` keyword. By using `let`, we can perform a few transformations
-on a value but have the variable be immutable after those transformations have
-completed.
-
-The other difference between `mut` and shadowing is that because we’re
-effectively creating a new variable when we use the `let` keyword again, we can
-change the type of the value but reuse the same name. For example, say our
-program asks a user to show how many spaces they want between some text by
-inputting space characters, and then we want to store that input as a number:
+`mut` 与遮蔽的另一个区别是，再次使用 `let` 关键字时，我们实际上创建了
+一个新变量，因此可以改变值的类型，同时重用同一个名称。例如，假设程序
+要求用户输入一些空格字符，以表示他们希望文本之间有多少个空格，然后我们
+打算将该输入存储为数字：
 
 ```rust
 {{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-04-shadowing-can-change-types/src/main.rs:here}}
 ```
 
-The first `spaces` variable is a string type, and the second `spaces` variable
-is a number type. Shadowing thus spares us from having to come up with
-different names, such as `spaces_str` and `spaces_num`; instead, we can reuse
-the simpler `spaces` name. However, if we try to use `mut` for this, as shown
-here, we’ll get a compile-time error:
+第一个 `spaces` 变量属于字符串类型，而第二个 `spaces` 变量则是数字类型。
+遮蔽让我们不必想出不同的名称，比如 `spaces_str` 与 `spaces_num`；相反，
+我们可以重用更简单的 `spaces` 名字。然而，当我们像下面这样尝试使用
+`mut` 时，就会得到编译时错误：
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-05-mut-cant-change-types/src/main.rs:here}}
 ```
 
-The error says we’re not allowed to mutate a variable’s type:
+
+该错误表明，我们不被允许改变变量的类型：
 
 ```console
 {{#include ../listings/ch03-common-programming-concepts/no-listing-05-mut-cant-change-types/output.txt}}
 ```
 
-Now that we’ve explored how variables work, let’s look at more data types they
-can have.
+现在我们已经了解了变量的工作方式，接下来看看变量还可以有哪些数据类型。
 
 [comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial.html#comparing-the-guess-to-the-secret-number
 [data-types]: ch03-02-data-types.html#data-types

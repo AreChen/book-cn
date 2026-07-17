@@ -1,29 +1,15 @@
-# Patterns and Matching
+# 模式与匹配
 
-Patterns are a special syntax in Rust for matching against the structure of
-types, both complex and simple. Using patterns in conjunction with `match`
-expressions and other constructs gives you more control over a program’s
-control flow. A pattern consists of some combination of the following:
+*模式，patterns* 属于 Rust 中的一种特殊语法，用于匹配简单和复杂的类型结构。与 `match` 表达式及其他结构结合使用模式，给予咱们对程序控制流程更多控制。模式由以下元素的一些组合构成：
 
-- Literals
-- Destructured arrays, enums, structs, or tuples
-- Variables
-- Wildcards
-- Placeholders
+- 字面值
+- 解构后的数组、枚举、结构体或元组
+- 变量
+- 通配符
+- 占位符
 
-Some example patterns include `x`, `(a, 3)`, and `Some(Color::Red)`. In the
-contexts in which patterns are valid, these components describe the shape of
-data. Our program then matches values against the patterns to determine whether
-it has the correct shape of data to continue running a particular piece of code.
+一些示例模式包括 `x`、`(a, 3)` 和 `Some(Color::Red)` 等。在模式有效的上下文中，这些组件描述了数据的形状。然后，我们的程序会将值与模式匹配，以确定其是否有着正确的数据形状，从而决定继续运行特定的代码片段。
 
-To use a pattern, we compare it to some value. If the pattern matches the
-value, we use the value parts in our code. Recall the `match` expressions in
-Chapter 6 that used patterns, such as the coin-sorting machine example. If the
-value fits the shape of the pattern, we can use the named pieces. If it
-doesn’t, the code associated with the pattern won’t run.
+要使用模式，我们就要将其与某个值比较。当模式与值匹配时，我们就会在代码中使用该值的各个部分。回顾第 6 章中使用模式的 `match` 表达式，比如硬币分类机的示例。当值符合模式的形状时，我们可以使用命名的部分。当不符合时，与该模式关联的代码将不会运行。
 
-This chapter is a reference on all things related to patterns. We’ll cover the
-valid places to use patterns, the difference between refutable and irrefutable
-patterns, and the different kinds of pattern syntax that you might see. By the
-end of the chapter, you’ll know how to use patterns to express many concepts in
-a clear way.
+这一章是所有与模式相关的内容的参考。我们将介绍

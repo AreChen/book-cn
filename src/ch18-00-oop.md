@@ -1,17 +1,7 @@
-# Object-Oriented Programming Features
+# 面向对象编程特性
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="object-oriented-programming-features-of-rust"></a>
 
-Object-oriented programming (OOP) is a way of modeling programs. Objects as a
-programmatic concept were introduced in the programming language Simula in the
-1960s. Those objects influenced Alan Kay’s programming architecture in which
-objects pass messages to each other. To describe this architecture, he coined
-the term _object-oriented programming_ in 1967. Many competing definitions
-describe what OOP is, and by some of these definitions Rust is object oriented
-but by others it is not. In this chapter, we’ll explore certain characteristics
-that are commonly considered object oriented and how those characteristics
-translate to idiomatic Rust. We’ll then show you how to implement an
-object-oriented design pattern in Rust and discuss the trade-offs of doing so
-versus implementing a solution using some of Rust’s strengths instead.
+面向对象编程，object-oriented programming, OOP, 属于建模程序的一种方式。对象作为一种编程概念，于 20 世纪 60 年代在编程语言 Simula 中所引入。这些对象影响了 Alan Kay 的编程架构，其中对象相互传递消息。为了描述这种架构，他在 1967 年创造了 *面向对象编程* 这个术语。关于 OOP 的定义众说纷纭，根据其中一些定义，Rust 属于面向对象语言，但根据其他定义，他则不属于。在这一章中，我们将探讨通常被视为是面向对象的一些特征，以及这些特征怎样被转化为 Rust 的惯用写法。然后，我们将展示如何在 Rust 中实现面向对象的设计模式，并讨论这样做与利用 Rust 自身优势，实现解决方案之间的权衡取舍。

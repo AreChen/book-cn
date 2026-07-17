@@ -8,6 +8,10 @@
 
 ## 在线阅读和本地构建
 
+中文版在线阅读：<https://arechen.github.io/book-cn/>
+
+每次 `main` 分支有新的提交后，GitHub Actions 会自动构建并发布网站；也可以在仓库的 Actions 页面手动运行 Pages 工作流。
+
 官方英文版：<https://doc.rust-lang.org/book/>
 
 本地构建需要 mdBook 和仓库使用的预处理器。官方构建方式是：
@@ -21,6 +25,12 @@ mdbook build
 ```powershell
 cargo test --manifest-path packages/trpl/Cargo.toml --locked
 mdbook test --library-path packages/trpl/target/debug/deps
+```
+
+开发翻译时可以启动本地实时预览：
+
+```powershell
+mdbook serve --open
 ```
 
 ## 翻译策略

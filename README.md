@@ -18,9 +18,10 @@
 
 ```powershell
 mdbook build
+node tools/build_search_index.mjs
 ```
 
-生成的站点位于 `book/` 目录。开发翻译时可以启动本地实时预览：
+生成的站点位于 `book/` 目录。第二条命令会从 mdBook 产物生成中文搜索索引；首次输入中文时，网站会按需加载该索引。开发翻译时可以启动本地实时预览；源文件变更后重新执行前两条命令以更新中文搜索：
 
 ```powershell
 mdbook serve --open
@@ -47,6 +48,7 @@ mdbook serve --open
 
 ```powershell
 mdbook build
+node tools/build_search_index.mjs
 git diff --check
 ```
 

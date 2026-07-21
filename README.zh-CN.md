@@ -18,9 +18,10 @@
 
 ```powershell
 mdbook build
+node tools/build_search_index.mjs
 ```
 
-生成的站点位于 `book/` 目录。运行书中代码测试：
+生成的站点位于 `book/` 目录。第二条命令会从 mdBook 产物生成中文搜索索引；首次输入中文时，网站会按需加载该索引。运行书中代码测试：
 
 ```powershell
 cargo test --manifest-path packages/trpl/Cargo.toml --locked
@@ -54,6 +55,7 @@ mdbook serve --open
 
 ```powershell
 mdbook build
+node tools/build_search_index.mjs
 git diff --check
 ```
 

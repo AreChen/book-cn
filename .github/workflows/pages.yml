@@ -42,7 +42,9 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build Chinese book
-        run: mdbook build
+        run: |
+          mdbook build
+          node tools/build_search_index.mjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

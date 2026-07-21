@@ -106,9 +106,12 @@ jobs:
       run: find . -name '*.sh' -print0 | xargs -0 shellcheck
     - name: Spellcheck
       run: bash ci/spellcheck.sh list
+    - name: Test Chinese search
+      run: node --test tools/test_search_cn.mjs
     - name: Lint for local file paths
       run: |
         mdbook build
+        node tools/build_search_index.mjs
         cargo run --bin lfp src
     - name: Validate references
       run: bash ci/validate.sh

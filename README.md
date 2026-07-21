@@ -1,109 +1,61 @@
-# The Rust Programming Language
+# 《Rust 程序设计语言》中文维护版 🦀
 
-![Build Status](https://github.com/rust-lang/book/workflows/CI/badge.svg)
+这是基于 [Rust 官方 Book 仓库](https://github.com/rust-lang/book) 的非官方中文翻译工作仓库。我们以官方 `main` 分支为内容上游，并参考社区已有译文来提高翻译效率和术语一致性。
 
-This repository contains the source of "The Rust Programming Language" book.
+> 中文版在线阅读：<https://arechen.github.io/book-cn/>
 
-中文工作入口：[`README.zh-CN.md`](README.zh-CN.md)
+当前 `src/` 中的 112 个 Markdown 文件都已经完成第一轮中文翻译；接下来仍需要社区逐章审校、润色和跟随官方上游更新。翻译过程中的代码块、链接、锚点和 mdBook 标记会由自动检查器持续保护，具体进度见 [`TRANSLATION_STATUS.md`](TRANSLATION_STATUS.md)。
 
-[The book is available in dead-tree form from No Starch Press][nostarch].
+当前基线包含 956 个代码围栏和 424 个 `Listing` 标记。翻译检查器会将它们与官方 `upstream/main` 逐项比较，避免中文化过程中破坏示例代码或书籍构建结构。
 
-[nostarch]: https://nostarch.com/rust-programming-language-2nd-edition
+## 在线阅读和本地构建
 
-You can also read the book for free online. Please see the book as shipped with
-the latest [stable], [beta], or [nightly] Rust releases. Be aware that issues
-in those versions may have been fixed in this repository already, as those
-releases are updated less frequently.
+每次 `main` 分支有新的提交后，GitHub Actions 会自动构建并发布网站；也可以在仓库的 Actions 页面手动运行 Pages 工作流。
 
-[stable]: https://doc.rust-lang.org/stable/book/
-[beta]: https://doc.rust-lang.org/beta/book/
-[nightly]: https://doc.rust-lang.org/nightly/book/
+官方英文版：<https://doc.rust-lang.org/book/>
 
-See the [releases] to download just the code of all the code listings that appear in the book.
+本地构建需要 mdBook 和仓库使用的预处理器：
 
-[releases]: https://github.com/rust-lang/book/releases
-
-## Requirements
-
-Building the book requires [mdBook], ideally the same version that
-rust-lang/rust uses in [this file][rust-mdbook]. To get it:
-
-[mdBook]: https://github.com/rust-lang/mdBook
-[rust-mdbook]: https://github.com/rust-lang/rust/blob/HEAD/src/tools/rustbook/Cargo.toml
-
-```bash
-$ cargo install mdbook --locked --version <version_num>
+```powershell
+mdbook build
 ```
 
-## Building
+生成的站点位于 `book/` 目录。开发翻译时可以启动本地实时预览：
 
-To build the book, type:
-
-```bash
-$ mdbook build
+```powershell
+mdbook serve --open
 ```
 
-The output will be in the `book` subdirectory. To check it out, open it in
-your web browser.
+## 翻译策略
 
-_Firefox:_
+- 官方 `rust-lang/book` 是内容和版本的唯一上游。
+- [gnu4cn/rust-lang-zh_CN](https://github.com/gnu4cn/rust-lang-zh_CN) 用作参考译文、术语和章节组织的辅助材料，不直接覆盖本仓库内容。
+- 保留 Rust 代码、代码标识符、命令、链接、锚点和示例行为。
+- 翻译决定记录在 [`TRANSLATION.md`](TRANSLATION.md)，统一术语记录在 [`GLOSSARY.md`](GLOSSARY.md)。
+- 每个已翻译文件记录对应的上游 commit，便于上游更新后重新审校。
 
-```bash
-$ firefox book/index.html                       # Linux
-$ open -a "Firefox" book/index.html             # OS X
-$ Start-Process "firefox.exe" .\book\index.html # Windows (PowerShell)
-$ start firefox.exe .\book\index.html           # Windows (Cmd)
+## 参与贡献
+
+请先阅读：
+
+- [`TRANSLATION.md`](TRANSLATION.md)：翻译、同步和审校规则
+- [`GLOSSARY.md`](GLOSSARY.md)：术语表
+- [`TRANSLATION_STATUS.md`](TRANSLATION_STATUS.md)：文件级进度
+- [`CONTRIBUTING.md`](CONTRIBUTING.md)：上游项目贡献说明
+
+提交前至少运行：
+
+```powershell
+mdbook build
+git diff --check
 ```
 
-_Chrome:_
+如果修改了代码清单或预处理器相关内容，再运行 `mdbook test`。Windows 上部分异步示例可能受本机 `link.exe` 查找 `windows.*.lib` 的方式影响；仓库 CI 在 Ubuntu 上执行完整的 mdBook 测试。
 
-```bash
-$ google-chrome book/index.html                 # Linux
-$ open -a "Google Chrome" book/index.html       # OS X
-$ Start-Process "chrome.exe" .\book\index.html  # Windows (PowerShell)
-$ start chrome.exe .\book\index.html            # Windows (Cmd)
-```
+## 上游与许可证
 
-To run the tests:
-
-```bash
-$ cd packages/trpl
-$ mdbook test --library-path packages/trpl/target/debug/deps
-```
-
-## Contributing
-
-We'd love your help! Please see [CONTRIBUTING.md][contrib] to learn about the
-kinds of contributions we're looking for.
-
-[contrib]: https://github.com/rust-lang/book/blob/main/CONTRIBUTING.md
-
-Because the book is [printed][nostarch], and because we want
-to keep the online version of the book close to the print version when
-possible, it may take longer than you're used to for us to address your issue
-or pull request.
-
-So far, we've been doing a larger revision to coincide with [Rust Editions](https://doc.rust-lang.org/edition-guide/). Between those larger
-revisions, we will only be correcting errors. If your issue or pull request
-isn't strictly fixing an error, it might sit until the next time that we're
-working on a large revision: expect on the order of months or years. Thank you
-for your patience!
-
-### Translations
-
-We'd love help translating the book! See the [Translations] label to join in
-efforts that are currently in progress. Open a new issue to start working on
-a new language! We're waiting on [mdbook support] for multiple languages
-before we merge any in, but feel free to start!
-
-[Translations]: https://github.com/rust-lang/book/issues?q=is%3Aopen+is%3Aissue+label%3ATranslations
-[mdbook support]: https://github.com/rust-lang/mdBook/issues/5
-
-## Spellchecking
-
-To scan source files for spelling errors, you can use the `spellcheck.sh`
-script available in the `ci` directory. It needs a dictionary of valid words,
-which is provided in `ci/dictionary.txt`. If the script produces a false
-positive (say, you used the word `BTreeMap` which the script considers invalid),
-you need to add this word to `ci/dictionary.txt` (keep the sorted order for
-consistency).
+- 中文 fork：<https://github.com/AreChen/book-cn>
+- 官方上游：<https://github.com/rust-lang/book>
+- 参考译文：<https://github.com/gnu4cn/rust-lang-zh_CN>
+- 英文仓库说明：[`README.en.md`](README.en.md)
+- 本仓库保留上游 MIT 和 Apache 2.0 许可证，详见 [`LICENSE-MIT`](LICENSE-MIT) 和 [`LICENSE-APACHE`](LICENSE-APACHE)。

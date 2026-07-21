@@ -2,6 +2,8 @@
 
 > 注意：本书这一版与纸质版和电子书版的[《Rust 程序设计语言》][nsprust]相同，均由[No Starch Press][nsp]出版。
 
+> 本中文维护版在线阅读：<https://arechen.github.io/book-cn/>。
+
 
 
 

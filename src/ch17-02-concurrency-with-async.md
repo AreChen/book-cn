@@ -88,7 +88,7 @@ hi number 9 from the first task!
 
 </Listing>
 
-- 只有在传给 trpl::joing 的两个未来值 *都* 完成后，其返回的未来值才会完成；
+- 只有在传给 trpl::join 的两个未来值 *都* 完成后，其返回的未来值才会完成；
 - tx_fut 未来值在发送完 vals 中最后一条消息并完成休眠后就会完成；
 - 在 while let 循环结束前，rx_fut 这个未来值不会完成；
 - 在等待 rx 产生 None 之前，while let 循环不会结束；

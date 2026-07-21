@@ -57,6 +57,22 @@ fn main() {}
         self.assertTrue(any("inline code" in issue for issue in issues))
         self.assertTrue(any("URL" in issue for issue in issues))
 
+    def test_allowlisted_translation_url_may_be_added(self):
+        source = "See https://example.com/docs.\n"
+        translated = (
+            "参见 https://example.com/docs。\n"
+            "本中文版本在线阅读：https://arechen.github.io/book-cn/\n"
+        )
+
+        self.assertEqual(
+            check_translation.compare_protected_tokens(
+                source,
+                translated,
+                allowed_translation_urls=check_translation.TRANSLATION_ONLY_URLS,
+            ),
+            [],
+        )
+
     def test_fenced_code_is_not_counted_as_inline_code(self):
         source = "```text\nA `literal` in a code block\n```\nUse `cargo test`.\n"
         translated = "```text\nA `literal` in a code block\n```\n使用 `cargo test`。\n"

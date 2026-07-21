@@ -8,6 +8,7 @@ differ from the English upstream source.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import re
 import subprocess
 import sys
@@ -35,6 +36,10 @@ ANCHOR_RE = re.compile(r'<a\s+(?:id|name)="([^"]+)"\s*>')
 HEADING_RE = re.compile(r"(?m)^#{1,6}\s+.+?\s*$")
 SUMMARY_LINK_RE = re.compile(r"(?<!\!)\[[^\]\n]+\]\(([^)\n]+)\)")
 HAN_RE = re.compile(r"[\u3400-\u9fff]")
+
+# Links maintained only by this translation project and intentionally absent
+# from the official English source.
+TRANSLATION_ONLY_URLS = frozenset({"https://arechen.github.io/book-cn/"})
 
 
 def _normalize_listing_tag(tag: str) -> str:
@@ -102,7 +107,30 @@ def protected_tokens(text: str) -> dict[str, list[str]]:
     }
 
 
-def compare_protected_tokens(source: str, translated: str, path: str = "source") -> list[str]:
+def _remove_allowed_translation_urls(
+    expected: list[str], actual: list[str], allowed: Iterable[str]
+) -> list[str]:
+    """Remove only allowlisted URL occurrences added by the translation."""
+
+    allowed = set(allowed)
+    expected_counts = Counter(expected)
+    seen_allowed = Counter()
+    filtered: list[str] = []
+    for value in actual:
+        if value in allowed:
+            if seen_allowed[value] >= expected_counts[value]:
+                continue
+            seen_allowed[value] += 1
+        filtered.append(value)
+    return filtered
+
+
+def compare_protected_tokens(
+    source: str,
+    translated: str,
+    path: str = "source",
+    allowed_translation_urls: Iterable[str] = (),
+) -> list[str]:
     """Return human-readable differences in protected token sequences."""
 
     issues: list[str] = []
@@ -110,6 +138,10 @@ def compare_protected_tokens(source: str, translated: str, path: str = "source")
     translated_tokens = protected_tokens(translated)
     for kind, expected in source_tokens.items():
         actual = translated_tokens[kind]
+        if kind == "URL":
+            actual = _remove_allowed_translation_urls(
+                expected, actual, allowed_translation_urls
+            )
         if expected != actual:
             issues.append(
                 f"{path}: {kind} differs (upstream {len(expected)}, translation {len(actual)})"
@@ -208,7 +240,14 @@ def validate_source(root: Path, upstream_ref: str, require_chinese: bool) -> lis
             issues.append(f"{relative}: no Simplified Chinese text found")
         upstream = _upstream_file(root, upstream_ref, relative)
         if upstream is not None:
-            issues.extend(compare_protected_tokens(upstream, text, relative))
+            issues.extend(
+                compare_protected_tokens(
+                    upstream,
+                    text,
+                    relative,
+                    allowed_translation_urls=TRANSLATION_ONLY_URLS,
+                )
+            )
 
     issues.extend(validate_summary_links(root))
     return issues

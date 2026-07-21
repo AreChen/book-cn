@@ -102,6 +102,8 @@ value`_ 对的花括号，其中键是字段名称，值是我们要存储在这
 
 <a id="using-tuple-structs-without-named-fields-to-create-different-types"></a>
 
+<a id="creating-different-types-with-tuple-structs"></a>
+
 ### 使用元组结构体创建不同类型
 
 Rust 还支持类似元组的结构体，称为_元组结构体_。元组结构体具有结构体名称带来的额外含义，但其字段没有关联的名称；相反，它们只有字段的类型。当你想给整个元组命名，使元组与其他元组成为不同类型，或者在普通结构体中命名每个字段会过于冗长或重复时，元组结构体就很有用。

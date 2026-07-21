@@ -55,6 +55,8 @@
 spawn 函数返回一个 JoinHandle&lt;T>，其中 T 是闭包返回的类型。我们也来尝试使用 JoinHandle，看看会发生什么。在我们的情形下，传递给线程池的闭包将处理连接，并且不返回任何值，因此 T 将是单元值类型 ()。
 
 <a id="creating-a-similar-interface-for-a-finite-number-of-threads"></a>
+<a id="creating-a-finite-number-of-threads"></a>
+
 #### 创建有限数量的线程
 接下来我们将解决的问题是，给予到 `ThreadPool` 的闭包不执行任何操作。目前，我们在 `thread::spawn` 方法中得到了打算执行的闭包。但在创建 ThreadPool 期间创建每个 Worker 时，我们需要给予 thread::spawn 一个要运行的闭包。
 
@@ -378,6 +380,7 @@ Worker 2 got a job; executing.
 清单 21-20 中使用 `let job =
 receiver.lock().unwrap().recv().unwrap();` 的代码之所以有效，是因为使用 `let` 时，等号右侧表达式中的临时值会在 `let` 语句结束时立即丢弃。然而，`while
 let`（以及 `if let` 和 `match`）不会在关联代码块结束前丢弃临时值。在清单 21-21 中，锁会在调用 `job()` 的整个期间保持持有，这意味着其他 `Worker` 实例无法接收作业。
+
 [type-aliases]: ch20-03-advanced-types.html#type-synonyms-and-type-aliases
 [integer-types]: ch03-02-data-types.html#integer-types
 [moving-out-of-closures]: ch13-01-closures.html#moving-captured-values-out-of-closures

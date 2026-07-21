@@ -1,3 +1,5 @@
+<a id="methods"></a>
+
 ## 方法
 
 方法与函数类似：我们使用 `fn` 关键字和名称声明方法；方法可以有参数和返回值，
@@ -9,6 +11,8 @@
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="defining-methods"></a>
+
+<a id="method-syntax"></a>
 
 ### 方法语法
 
@@ -72,6 +76,8 @@ Rust 知道我们指的是 `width` 字段。
 字段的只读访问作为类型公开 API 的一部分。我们将在[第
 7 章][public]<!-- ignore -->讨论公开和私有的含义，以及如何将字段或方法指定为公开
 或私有。
+
+<a id="wheres-the---operator"></a>
 
 > ### `->` 运算符在哪里？
 >

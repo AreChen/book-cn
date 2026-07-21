@@ -1,3 +1,5 @@
+<a id="the-slice-type"></a>
+
 ## 切片类型
 
 _切片_让你可以引用[集合](ch08-00-common-collections.md)<!-- ignore -->中连续的一系列
@@ -88,6 +90,8 @@ fn second_word(s: &String) -> (usize, usize) {
 却完全没有与该状态绑定。我们有三个互不相关、需要保持同步的变量在四处存在。
 
 幸运的是，Rust 有解决这个问题的办法：字符串切片。
+
+<a id="string-slices"></a>
 
 ### 字符串切片
 

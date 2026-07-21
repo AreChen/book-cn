@@ -1,3 +1,5 @@
+<a id="macros"></a>
+
 ## 宏，macro
 
 在这本书中，我们一直使用像 `println!` 这样的宏，但尚未全面探讨什么是宏，以及他的工作原理。 *宏，macro* 这个术语，指的是 Rust 中的一类特性 -- 通过 `macro_rules!` 的 *声明式宏，declarative macro*，以及如下三种 *程序式宏，procedural macro*：

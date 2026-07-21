@@ -1,3 +1,5 @@
+<a id="installation"></a>
+
 ## 安装
 
 第一步是安装 Rust。我们会通过 `rustup` 下载 Rust；它是一个用于管理 Rust 版本及相关工具的命令行工具。下载过程需要互联网连接。
@@ -44,6 +46,8 @@ Linux 用户一般应根据其发行版的文档，安装 GCC 或 Clang。例如
 ignore -->。
 
 本书其余部分使用的命令既可在 _cmd.exe_ 中运行，也可在 PowerShell 中运行。如果两者存在具体差异，我们会说明应使用哪一种。
+
+<a id="troubleshooting"></a>
 
 ### 问题排除
 

@@ -73,6 +73,17 @@ fn main() {}
             [],
         )
 
+    def test_translation_may_add_english_heading_anchor_aliases(self):
+        source = "<a id=\"stable-anchor\"></a>\n"
+        translated = (
+            "<a id=\"stable-anchor\"></a>\n"
+            "<a id=\"the-upstream-heading\"></a>\n"
+        )
+
+        self.assertEqual(
+            check_translation.compare_protected_tokens(source, translated), []
+        )
+
     def test_fenced_code_is_not_counted_as_inline_code(self):
         source = "```text\nA `literal` in a code block\n```\nUse `cargo test`.\n"
         translated = "```text\nA `literal` in a code block\n```\n使用 `cargo test`。\n"

@@ -2,6 +2,8 @@
 
 <a id="using-trait-objects-that-allow-for-values-of-different-types"></a>
 
+<a id="using-trait-objects-to-abstract-over-shared-behavior"></a>
+
 ## 使用特质对象来抽象共用行为
 
 在第 8 章中，我们提到矢量值的一个限制是，他们只能存储一种类型的元素。我们在 清单 8-9 中创建了一种变通方案，其中定义了一个 `SpreadsheetCell` 枚举，有着分别保存整数、浮点数与文本的变种。这就意味着我们可以在每个单元格中存储不同类型的数据，并且仍然有个表示一行单元格的矢量值。当我们的可互换项在代码编译时就属于已知的固定类型时，这是一种非常好的解决方案。

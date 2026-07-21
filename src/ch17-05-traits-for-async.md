@@ -27,7 +27,7 @@ pub trait Future {
 
 这一特质定义包含了一堆新类型，以及一些我们以前从未见过的语法，因此我们来逐一解析该定义。
 
-首先，`Future` 的关联类型 `Output` 表明未来值解析为什么。这类似于 [`Item` 特质的关联类型 `Iterator`]。其次，`Future` 有着 `poll` 方法，其取一个特殊的 `Pin` 引用作为他的 `self` 参数，和到一个 `Context` 类型的可变引用，并返回 `Poll<Self::Output>`。稍后我们将详细讨论 `Pin` 与 `Context`。目前，我们来先关注该方法返回的内容，即 `Poll` 类型：
+首先，`Future` 的关联类型 `Output` 表明未来值解析为什么。这类似于 `Item` 特质的关联类型 `Iterator`。其次，`Future` 有着 `poll` 方法，其取一个特殊的 `Pin` 引用作为他的 `self` 参数，和到一个 `Context` 类型的可变引用，并返回 `Poll<Self::Output>`。稍后我们将详细讨论 `Pin` 与 `Context`。目前，我们来先关注该方法返回的内容，即 `Poll` 类型：
 
 ```rust
 pub enum Poll<T> {

@@ -151,6 +151,8 @@ let add_one_v4 = |x|               x + 1  ;
 
 <a id="moving-captured-values-out-of-closures-and-the-fn-traits"></a>
 
+<a id="moving-captured-values-out-of-closures"></a>
+
 ### 从闭包中迁出捕获值
 
 一旦闭包从其被定义的环境中捕获了某个引用，或捕获了环境中某个值的所有权后（从而影响被迁移 *进入* 闭包中的内容，在有内容被迁入时），闭包主体中的代码定义在稍后闭包被求值时，对这些引用或值会发生什么操作（从而影响从闭包迁移 *出去* 的内容，在有内容被迁出时）。

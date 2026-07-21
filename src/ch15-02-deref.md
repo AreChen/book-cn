@@ -3,6 +3,8 @@
 <a id="treating-smart-pointers-like-regular-references-with-the-deref-trait"></a>
 <a id="treating-smart-pointers-like-regular-references-with-deref"></a>
 
+<a id="treating-smart-pointers-like-regular-references"></a>
+
 ## 将灵巧指针视为普通引用
 
 实现 `Deref` 特质允许咱们定制 *解引用运算符* `*`（请不要与乘法或通配符混淆）的行为。通过以这种方式实现 `Deref`，灵巧指针可被视为普通引用，咱们可以编写对引用进行操作的代码，并也可以对灵巧指针使用该代码。

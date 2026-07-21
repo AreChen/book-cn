@@ -38,6 +38,10 @@
 在弃用锁后，我们可以打印互斥量值，并看到我们能够修改内层的 `i32` 为 `6`。
 
 <a id="sharing-a-mutext-between-multiple-threads"></a>
+<a id="shared-access-to-mutex"></a>
+
+<a id="shared-access-to-mutext"></a>
+
 #### 共用对 `Mutex<T>` 的访问
 现在，我们来尝试使用 `Mutex<T>` 在多个线程间共用值。我们将启动 10 个线程，并让他们每个都递增计数器值加 1，因此计数器会从 0 增加到 10。下面清单 16-13 中的示例将有个编译器报错，而我们将使用该报错进一步了解有关使用 `Mutex<T>` 的更多信息，以及 Rust 如何帮助我们正确使用他。
 

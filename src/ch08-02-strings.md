@@ -1,3 +1,5 @@
+<a id="storing-utf-8-encoded-text-with-strings"></a>
+
 ## 使用字符串存储 UTF-8 编码的文本
 
 我们在第 4 章讨论过字符串，现在来更深入地了解它们。Rust 新手经常会在字符串上

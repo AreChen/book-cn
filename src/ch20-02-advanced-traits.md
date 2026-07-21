@@ -1,3 +1,5 @@
+<a id="advanced-traits"></a>
+
 ## 高级特质
 
 我们在第 10 章中 [“Defining Shared Behavior with
@@ -281,6 +283,8 @@ Rust 并未禁止一个特质有着与另一特质的方法同名的方法，也
 
 <a id="using-the-newtype-pattern-to-implement-external-traits-on-external-types"></a>
 <a id="using-the-newtype-pattern-to-implement-external-traits"></a>
+
+<a id="implementing-external-traits-with-the-newtype-pattern"></a>
 
 ### 通过新型模式实现外部特质
 

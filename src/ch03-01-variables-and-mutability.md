@@ -1,3 +1,5 @@
+<a id="variables-and-mutability"></a>
+
 ## 变量与可变性
 
 如[“用变量存储值”][storing-values-with-variables]<!-- ignore --> 一节所述，
@@ -63,6 +65,8 @@
 <!-- Old headings. Do not remove or links may break. -->
 <a id="constants"></a>
 
+<a id="declaring-constants"></a>
+
 ### 声明常量
 
 和不可变变量一样，_常量_也是绑定到名称且不允许改变的值，但常量与变量
@@ -98,6 +102,8 @@ Rust 对常量的命名惯例是全部使用大写字母，并在单词之间使
 
 将程序中到处使用的硬编码值命名为常量，有助于向未来维护代码的人传达该
 值的含义。如果将来需要更新硬编码值，也只需修改代码中的一个地方。
+
+<a id="shadowing"></a>
 
 ### 遮蔽
 

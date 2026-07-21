@@ -12,6 +12,8 @@ Erich Gamma、Richard Helm、Ralph Johnson 及 John Vlissides 等的合著 *Desi
 
 使用这个定义，那么 Rust 是面向对象的：结构体和枚举包含数据，而 `impl` 代码块提供结构体和枚举上的方法。尽管带有方法的结构体与枚举未 *被称作* 对象，但根据 The Gang of Four 对对象的定义，他们提供了同样的功能。
 
+<a id="encapsulation-that-hides-implementation-details"></a>
+
 ### 隐藏实现细节的封装
 
 通常与 OOP 相关的另一方面是，*封装，encapsulation* 的思想，这意味着使用对象的代码无法访问对象的实现细节。因此，与对象交互的唯一方式是，通过对象的公开 API；使用对象的代码不应能够深入对象内部，并直接更改数据或行为。这使得程序员能够修改和重构对象的内部结构，而无需更改使用对象的代码。

@@ -40,6 +40,7 @@ HAN_RE = re.compile(r"[\u3400-\u9fff]")
 # Links maintained only by this translation project and intentionally absent
 # from the official English source.
 TRANSLATION_ONLY_URLS = frozenset({"https://arechen.github.io/book-cn/"})
+TRANSLATION_ANCHOR_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
 def _normalize_listing_tag(tag: str) -> str:
@@ -125,6 +126,23 @@ def _remove_allowed_translation_urls(
     return filtered
 
 
+def _remove_translation_anchor_aliases(
+    expected: list[str], actual: list[str]
+) -> list[str]:
+    """Remove English slug aliases added for translated headings."""
+
+    expected_counts = Counter(expected)
+    seen_aliases = Counter()
+    filtered: list[str] = []
+    for value in actual:
+        if TRANSLATION_ANCHOR_RE.fullmatch(value):
+            if seen_aliases[value] >= expected_counts[value]:
+                continue
+            seen_aliases[value] += 1
+        filtered.append(value)
+    return filtered
+
+
 def compare_protected_tokens(
     source: str,
     translated: str,
@@ -142,6 +160,8 @@ def compare_protected_tokens(
             actual = _remove_allowed_translation_urls(
                 expected, actual, allowed_translation_urls
             )
+        elif kind == "anchor":
+            actual = _remove_translation_anchor_aliases(expected, actual)
         if expected != actual:
             issues.append(
                 f"{path}: {kind} differs (upstream {len(expected)}, translation {len(actual)})"

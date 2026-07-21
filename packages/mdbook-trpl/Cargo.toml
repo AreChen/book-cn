@@ -20,7 +20,7 @@ name = "mdbook-trpl-figure"
 path = "src/bin/figure.rs"
 
 [dependencies]
-anyhow = "1"
+anyhow = "1.0.104"
 clap = { version = "4", features = ["derive"] }
 html_parser = "0.7.0"
 mdbook-preprocessor = "0.5.1"
